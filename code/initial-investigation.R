@@ -24,7 +24,7 @@ dflu <- diff(usflu3$X.UNWEIGHTED.ILI)
 acf(dflu,lag.max= 53)
 acf(dflu,lag.max= 53,type=c("partial"))
 
-## FIRST DIFFERENCE qplot
+## FIRST DIFFERENCE QPLOT
 dflu_dat <- cbind(usflu3$X1,dflu)
 qplot(x=usflu3$X1[-c(1)],y=dflu, geom="line")
 
