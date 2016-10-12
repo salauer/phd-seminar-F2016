@@ -1,7 +1,11 @@
 PackratFormat: 1.4
 PackratVersion: 0.4.7.1
-RVersion: 3.3.1
-Repos: CRAN=https://cran.rstudio.com/
+RVersion: 3.2.3
+Repos: BioCsoft=https://bioconductor.org/packages/3.2/bioc,
+    BioCann=https://bioconductor.org/packages/3.2/data/annotation,
+    BioCexp=https://bioconductor.org/packages/3.2/data/experiment,
+    BioCextra=https://bioconductor.org/packages/3.2/extra,
+    CRAN=https://cran.rstudio.com/
 
 Package: BH
 Source: CRAN
@@ -12,6 +16,11 @@ Package: DBI
 Source: CRAN
 Version: 0.5-1
 Hash: 375869004db963f9915f2b8a49b4a718
+
+Package: MASS
+Source: CRAN
+Version: 7.3-45
+Hash: 0650d5701aa7e369e77c9e2c8e1dc913
 
 Package: R6
 Source: CRAN
@@ -87,7 +96,7 @@ Package: ggplot2
 Source: CRAN
 Version: 2.1.0
 Hash: 50e297b0191179c39c7dcae0eff72b51
-Requires: digest, gtable, plyr, reshape2, scales
+Requires: MASS, digest, gtable, plyr, reshape2, scales
 
 Package: gtable
 Source: CRAN
@@ -97,7 +106,6 @@ Hash: cd78381a9d3fea966ac39bd0daaf5554
 Package: hms
 Source: CRAN
 Version: 0.2
-Hash: c1b6ded8c65ae31a98d73a312b2e6574
 
 Package: httr
 Source: CRAN
@@ -200,7 +208,6 @@ Requires: magrittr, stringi
 Package: tibble
 Source: CRAN
 Version: 1.2
-Hash: 3b35b556ef7acddb0d28fe6a27ad50e4
 Requires: Rcpp, assertthat, lazyeval
 
 Package: timeDate
