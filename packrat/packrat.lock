@@ -28,6 +28,12 @@ Source: CRAN
 Version: 0.12.7
 Hash: f0ba7322cfb66f1b563462faa9c2b2ab
 
+Package: RcppArmadillo
+Source: CRAN
+Version: 0.7.400.2.0
+Hash: 5c6ad5ed5029ca79a26f3f17afd037f4
+Requires: Rcpp
+
 Package: assertthat
 Source: CRAN
 Version: 0.1
@@ -64,6 +70,18 @@ Source: CRAN
 Version: 0.5.0
 Hash: 03e5e71801c0f49217922e2cd4680f06
 Requires: BH, DBI, R6, Rcpp, assertthat, lazyeval, magrittr, tibble
+
+Package: forecast
+Source: CRAN
+Version: 7.2
+Hash: e7b03ce2ef2830a0bb204f373a8d0ad2
+Requires: Rcpp, RcppArmadillo, colorspace, fracdiff, ggplot2, timeDate,
+    tseries, zoo
+
+Package: fracdiff
+Source: CRAN
+Version: 1.4-2
+Hash: 75e1920799a698acf5912369675100af
 
 Package: ggplot2
 Source: CRAN
@@ -102,6 +120,12 @@ Source: CRAN
 Version: 0.2.0
 Hash: 3d6e7608e65bbf5cb170dab1e3c9ed8b
 
+Package: lubridate
+Source: CRAN
+Version: 1.6.0
+Hash: b90f4cbefe0b3c545dd68b22c66a8a12
+Requires: stringr
+
 Package: magrittr
 Source: CRAN
 Version: 1.5
@@ -139,6 +163,11 @@ Version: 1.8.4
 Hash: 75ca080b10a9314a9b293964331e5df7
 Requires: Rcpp
 
+Package: quadprog
+Source: CRAN
+Version: 1.5-5
+Hash: 69000b7dc41b09977dcf781f909d235c
+
 Package: readr
 Source: CRAN
 Version: 1.0.0
@@ -174,8 +203,24 @@ Version: 1.2
 Hash: 3b35b556ef7acddb0d28fe6a27ad50e4
 Requires: Rcpp, assertthat, lazyeval
 
+Package: timeDate
+Source: CRAN
+Version: 3012.100
+Hash: 78876c125c98033cd093fa0283469637
+
+Package: tseries
+Source: CRAN
+Version: 0.10-35
+Hash: 7e682b3836fe687ac9ab9d8f9137064c
+Requires: quadprog, zoo
+
 Package: xml2
 Source: CRAN
 Version: 1.0.0
 Hash: a55c497b694e044296830eb8ac5c2fee
 Requires: BH, Rcpp
+
+Package: zoo
+Source: CRAN
+Version: 1.7-13
+Hash: 5e9d37229de4b68b9a5e09a619e0f9b6
