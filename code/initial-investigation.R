@@ -4,7 +4,7 @@
 library(cdcfluview)
 library(ggplot2)
 library(readr)
-library()
+
 #usflu <- get_flu_data("national", "ilinet", years=1997:2010)
 #write.csv(usflu, "data/usflu.csv")
 usflu <- read_csv("data/usflu.csv", na="X")
@@ -25,7 +25,6 @@ acf(dflu,lag.max= 53)
 acf(dflu,lag.max= 53,type=c("partial"))
 
 ## FIRST DIFFERENCE QPLOT
-dflu_dat <- cbind(usflu3$X1,dflu)
 qplot(x=usflu3$X1[-c(1)],y=dflu, geom="line")
 
 ## SEASONAL DIFFERENCING
