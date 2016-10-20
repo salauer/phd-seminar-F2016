@@ -4,6 +4,7 @@
 library(cdcfluview)
 library(ggplot2)
 library(readr)
+library(astsa)
 
 #usflu <- get_flu_data("national", "ilinet", years=1997:2010)
 #write.csv(usflu, "data/usflu.csv")
@@ -38,3 +39,12 @@ acf(dflu,lag.max= 53)
 acf(dflu,lag.max= 53,type=c("partial"))
 acf(ddflu,lag.max = 53)
 acf(ddflu,lag.max = 53,type="partial")
+
+par(mfrow=c(2,1))
+dlogflu <- diff(log(usflu3$X.UNWEIGHTED.ILI))
+acf(dlogflu,lag.max= 53)
+acf(dlogflu,lag.max= 53,type=c("partial"))
+
+ddlogflu <- diff(diff(log(usflu3$X.UNWEIGHTED.ILI)),52)
+acf(ddlogflu,lag.max= 53)
+acf(ddlogflu,lag.max= 53,type=c("partial"))
