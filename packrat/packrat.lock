@@ -1,6 +1,6 @@
 PackratFormat: 1.4
 PackratVersion: 0.4.7.1
-RVersion: 3.2.3
+RVersion: 3.3.1
 Repos: BioCsoft=https://bioconductor.org/packages/3.2/bioc,
     BioCann=https://bioconductor.org/packages/3.2/data/annotation,
     BioCexp=https://bioconductor.org/packages/3.2/data/experiment,
@@ -48,6 +48,11 @@ Source: CRAN
 Version: 0.1
 Hash: 0afb92b59b02593c70ff8046700ba9d3
 
+Package: astsa
+Source: CRAN
+Version: 1.6
+Hash: f2a81bef078ae522714aabc9f04e2ea9
+
 Package: cdcfluview
 Source: CRAN
 Version: 0.4.0
@@ -80,6 +85,18 @@ Version: 0.5.0
 Hash: 03e5e71801c0f49217922e2cd4680f06
 Requires: BH, DBI, R6, Rcpp, assertthat, lazyeval, magrittr, tibble
 
+Package: fBasics
+Source: CRAN
+Version: 3011.87
+Hash: 23588ee642fb467535fe46777ce75f96
+Requires: MASS, gss, stabledist, timeDate, timeSeries
+
+Package: fGarch
+Source: CRAN
+Version: 3010.82.1
+Hash: 76bb33e183eecae94a6eecce063159a2
+Requires: fBasics, timeDate, timeSeries
+
 Package: forecast
 Source: CRAN
 Version: 7.2
@@ -98,6 +115,11 @@ Version: 2.1.0
 Hash: 50e297b0191179c39c7dcae0eff72b51
 Requires: MASS, digest, gtable, plyr, reshape2, scales
 
+Package: gss
+Source: CRAN
+Version: 2.1-6
+Hash: 8b03a039a9896440cf0b59a6f617f447
+
 Package: gtable
 Source: CRAN
 Version: 0.2.0
@@ -106,6 +128,7 @@ Hash: cd78381a9d3fea966ac39bd0daaf5554
 Package: hms
 Source: CRAN
 Version: 0.2
+Hash: c1b6ded8c65ae31a98d73a312b2e6574
 
 Package: httr
 Source: CRAN
@@ -194,6 +217,11 @@ Version: 0.4.0
 Hash: c4a91e7a322e03813b68b73940ce031f
 Requires: RColorBrewer, Rcpp, dichromat, labeling, munsell, plyr
 
+Package: stabledist
+Source: CRAN
+Version: 0.7-1
+Hash: 22535f64b26104efc7e78e42bdf4982c
+
 Package: stringi
 Source: CRAN
 Version: 1.1.2
@@ -208,12 +236,19 @@ Requires: magrittr, stringi
 Package: tibble
 Source: CRAN
 Version: 1.2
+Hash: 3b35b556ef7acddb0d28fe6a27ad50e4
 Requires: Rcpp, assertthat, lazyeval
 
 Package: timeDate
 Source: CRAN
 Version: 3012.100
 Hash: 78876c125c98033cd093fa0283469637
+
+Package: timeSeries
+Source: CRAN
+Version: 3022.101.2
+Hash: 7f535d772209c1f07ba0334352937556
+Requires: timeDate
 
 Package: tseries
 Source: CRAN
