@@ -53,6 +53,22 @@ Source: CRAN
 Version: 1.6
 Hash: f2a81bef078ae522714aabc9f04e2ea9
 
+Package: base64enc
+Source: CRAN
+Version: 0.1-3
+Hash: c590d29e555926af053055e23ee79efb
+
+Package: bitops
+Source: CRAN
+Version: 1.0-6
+Hash: 67d0775189fd0041d95abca618c5c07e
+
+Package: caTools
+Source: CRAN
+Version: 1.17.1
+Hash: 97cb6f6293cd18d17df77a6383cc6763
+Requires: bitops
+
 Package: cdcfluview
 Source: CRAN
 Version: 0.4.0
@@ -85,6 +101,12 @@ Version: 0.5.0
 Hash: 03e5e71801c0f49217922e2cd4680f06
 Requires: BH, DBI, R6, Rcpp, assertthat, lazyeval, magrittr, tibble
 
+Package: evaluate
+Source: CRAN
+Version: 0.10
+Hash: c3601a10c987d439e0c63ec635234a76
+Requires: stringr
+
 Package: fBasics
 Source: CRAN
 Version: 3011.87
@@ -103,6 +125,11 @@ Version: 7.2
 Hash: e7b03ce2ef2830a0bb204f373a8d0ad2
 Requires: Rcpp, RcppArmadillo, colorspace, fracdiff, ggplot2, timeDate,
     tseries, zoo
+
+Package: formatR
+Source: CRAN
+Version: 1.4
+Hash: b2a47a2b91737978cf50ba95825a9cd1
 
 Package: fracdiff
 Source: CRAN
@@ -125,10 +152,21 @@ Source: CRAN
 Version: 0.2.0
 Hash: cd78381a9d3fea966ac39bd0daaf5554
 
+Package: highr
+Source: CRAN
+Version: 0.6
+Hash: aa3d5b7912b5fed4b546ed5cd2a1760b
+
 Package: hms
 Source: CRAN
 Version: 0.2
 Hash: c1b6ded8c65ae31a98d73a312b2e6574
+
+Package: htmltools
+Source: CRAN
+Version: 0.3.5
+Hash: a96dc1cfe628e66337c86be732567df2
+Requires: Rcpp, digest
 
 Package: httr
 Source: CRAN
@@ -140,6 +178,12 @@ Package: jsonlite
 Source: CRAN
 Version: 1.1
 Hash: 86d4b85b84421a4815f1bb4872e30ef4
+
+Package: knitr
+Source: CRAN
+Version: 1.14
+Hash: e7b411f5a5512295a260a45683fa0c4a
+Requires: digest, evaluate, formatR, highr, markdown, stringr, yaml
 
 Package: labeling
 Source: CRAN
@@ -161,6 +205,12 @@ Package: magrittr
 Source: CRAN
 Version: 1.5
 Hash: bdc4d48c3135e8f3b399536ddf160df4
+
+Package: markdown
+Source: CRAN
+Version: 0.7.7
+Hash: fea2343a1119d61b0cc5c0a950d103a3
+Requires: mime
 
 Package: mime
 Source: CRAN
@@ -210,6 +260,17 @@ Source: CRAN
 Version: 1.4.1
 Hash: c9a8d2349fe969cf519dd0ced9cc1414
 Requires: Rcpp, plyr, stringr
+
+Package: rmarkdown
+Source: github
+Version: 1.0.9001
+Hash: ffcced8095b3f0d8f0c28d323b1b978c
+Requires: base64enc, caTools, evaluate, htmltools, jsonlite, knitr,
+    yaml
+GithubRepo: rmarkdown
+GithubUsername: rstudio
+GithubRef: master
+GithubSha1: c5f841121bad5a0507874cca035e0f2d85554336
 
 Package: scales
 Source: CRAN
@@ -261,6 +322,11 @@ Source: CRAN
 Version: 1.0.0
 Hash: a55c497b694e044296830eb8ac5c2fee
 Requires: BH, Rcpp
+
+Package: yaml
+Source: CRAN
+Version: 2.1.13
+Hash: 4854ccabebc225e8a7309fb4a74980de
 
 Package: zoo
 Source: CRAN

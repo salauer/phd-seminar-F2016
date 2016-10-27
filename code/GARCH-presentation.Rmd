@@ -1,0 +1,139 @@
+---
+title: "GARCH Markdown"
+author: "Steve and Sara"
+date: "October 27, 2016"
+output: html_document
+---
+
+In this script we try and figure out how to use SARIMA and a GARCH model to fit the flu data.
+To read more about the data, see: <https://predict.phiresearchlab.org/legacy/flu/targets.html> and <https://github.com/cdcepi/flu-tools-2015-16>
+
+To get the data see the `data-pulling.R` script in the `code` folder.
+
+```{r libraries, include=FALSE}
+library(ggplot2)
+library(readr)
+library(astsa)
+library(fGarch)
+library(forecast)
+library(dplyr)
+
+train_series <- read_csv("../data/train_data.csv", na="X") %>% 
+    filter(YEAR>=2003) %>% 
+    select(time=X1, ILI=X.UNWEIGHTED.ILI)
+
+test_series <- read_csv("../data/test_data.csv") %>% 
+    select(time=X1, ILI=X.UNWEIGHTED.ILI)
+```
+
+GARCH is often used on the difference of the log values (roughly the percent change).
+GARCH can be viewed sort of like an ARMA that accounts for non-constant variance.
+Thus, we will first try to fit an ARMA model for the difference of the logs, which is what GARCH is usually performed on.
+
+```{r, echo=FALSE}
+dILI <- as.ts(diff(log(train_series$ILI)))
+
+ILI_auto_arima <- auto.arima(dILI, stepwise = FALSE, approximation = FALSE, trace=FALSE)
+arimaorder(ILI_auto_arima)
+```
+
+```{r, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(dILI, 1,0,1,0,0,0,0)
+```
+
+What happens if we make the period 52 weeks:
+
+
+```{r, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(dILI, 1,0,1,0,1,0,52)
+```
+
+That looks better on the p-values, but a bit funky in the first 52 standardized residuals.
+
+We'll use that first SARIMA to predict the test set (since we can't use the periodic component for GARCH anyways)
+
+```{r sarima preds, echo=FALSE, fig.keep=TRUE, results='hide', message=FALSE}
+ILI_arima <- arima(dILI,
+                   order=c(1,0,1))
+
+testILI <- as.ts(diff(log(test_series$ILI)))
+ILI_preds <- Arima(testILI, model=ILI_arima)
+
+ggplot() +
+    geom_line(aes(x=1:length(testILI), y=testILI)) +
+    geom_line(aes(x=1:length(testILI), y=testILI+ILI_preds$residuals), color="red", linetype="dashed")
+```
+
+And we can calculate the mean absolute error of our predictions:
+```{r}
+mean(abs(ILI_preds$residuals))
+```
+
+Next we try to build a GARCH model using an ARMA(1,1) (similar to the one we got with `auto.arima()`). But we need to try a few GARCH(m,r) models
+
+```{r GARCH stats}
+ILI_garch10 <- garchFit(~arma(1,1)+garch(1,0), dILI, trace=FALSE)
+summary(ILI_garch10)
+ILI_garch20 <- garchFit(~arma(1,1)+garch(2,0), dILI, trace=FALSE)
+summary(ILI_garch20)
+ILI_garch11 <- garchFit(~arma(1,1)+garch(1,1), dILI, trace=FALSE)
+summary(ILI_garch11)
+ILI_garch21 <- garchFit(~arma(1,1)+garch(2,1), dILI, trace=FALSE)
+summary(ILI_garch21)
+ILI_garch10@fit$ics
+ILI_garch20@fit$ics
+ILI_garch11@fit$ics
+ILI_garch21@fit$ics
+```
+
+```{r GARCH fit plot, echo=FALSE, message=FALSE}
+ggplot() +
+    geom_line(aes(x=train_series$time[-1],y=dILI)) +
+    geom_line(aes(x=train_series$time[-1],y=dILI+ILI_garch11@residuals), color="red", linetype="dashed")
+```
+
+The GARCH package in R doesn't seem to allow you to make predictions with the same model for a new set of data.
+Instead, you need to re-fit the model after each step and predict the next one.
+This means that it has more information than the SARIMA one does for making predictions at each step, as the SARIMA is only fit to the training data.
+
+```{r GARCH preds, cache=TRUE}
+whole_series <- bind_rows(train_series, test_series)
+garch_preds <- c()
+for(i in 0:(nrow(test_series)-2)){
+    new_train <- whole_series[1:(nrow(train_series)+i),]
+    new_dILI <- as.ts(diff(log(new_train$ILI)))
+    new_fit <- garchFit(~arma(1,1)+garch(1,1), new_dILI, trace=F)
+    garch_preds[i+1] <- predict(new_fit, n.ahead=1)$meanForecast
+}
+```
+
+```{r GARCH pred graph, echo=FALSE, message=FALSE}
+ggplot() +
+    geom_line(aes(x=1:208, y=testILI)) +
+    geom_line(aes(x=1:208, y=garch_preds), color="red", linetype="dashed")
+```
+
+Unlike SARIMA, the GARCH model does not miss over the top, but rather by not going far enough in its predictions.
+The MAE is similar to that of the SARIMA model (but worse, despite having a data advantage):
+
+```{r GARCH MAE}
+mean(abs(testILI-garch_preds))
+```
+
+Lastly, lets see what happens if we convert these values back to their original form and take the MAEs:
+
+```{r undo transform}
+ILI_SARIMA <- exp(cumsum(c(log(train_series$ILI[nrow(train_series)]),ILI_preds$residuals))[-1])
+mean(abs(ILI_SARIMA-test_series$ILI[-nrow(test_series)]))
+
+ILI_GARCH <- exp(cumsum(c(log(train_series$ILI[nrow(train_series)]),garch_preds))[-1])
+mean(abs(ILI_GARCH-test_series$ILI[-nrow(test_series)]))
+
+ggplot() +
+    geom_line(aes(x=1:208, y=test_series$ILI[-nrow(test_series)])) +
+    geom_line(aes(x=1:208, y=ILI_SARIMA), color="red", linetype="dashed") +
+    geom_line(aes(x=1:208, y=ILI_GARCH), color="blue", linetype="dotted")
+```
+
+After transformation, you can see that the GARCH method is really looking for reversion to the mean and not doing a good job at all of capturing the peaks or nadirs.
+Seems like the SARIMA model is better for use with this dataset.

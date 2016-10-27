@@ -1,0 +1,159 @@
+---
+title: "ACF issues"
+author: "Steve and Sara"
+date: "October 27, 2016"
+output: html_document
+---
+
+```{r libraries, include=FALSE}
+library(ggplot2)
+library(readr)
+library(astsa)
+library(fGarch)
+library(forecast)
+library(dplyr)
+
+train_series <- read_csv("../data/train_data.csv", na="X") %>% 
+    filter(YEAR>=2003) %>% 
+    select(time=X1, ILI=X.UNWEIGHTED.ILI)
+
+test_series <- read_csv("../data/test_data.csv") %>% 
+    select(time=X1, ILI=X.UNWEIGHTED.ILI)
+```
+
+Look at the data, raw. Before trying to make it stationary.
+
+```{r raw, echo=FALSE, fig.keep=TRUE, results='hide'}
+ggplot() +
+    geom_line(aes(x=train_series$time, y=train_series$ILI))
+acf2(train_series$ILI,200)
+```
+
+Look at the differenced data
+
+```{r diff, echo=FALSE, fig.keep=TRUE, results='hide'}
+ggplot() +
+    geom_line(aes(x=train_series$time[-1], y=diff(train_series$ILI)))
+acf2(diff(train_series$ILI),200)
+```
+
+Look at the difference of the log data
+
+```{r diff log, echo=FALSE, fig.keep=TRUE, results='hide'}
+ggplot() +
+    geom_line(aes(x=train_series$time[-1], y=diff(log(train_series$ILI))))
+acf2(diff(log(train_series$ILI)),200)
+```
+
+Differenced log data with seasonal differencing
+
+```{r diff diff log, echo=FALSE, fig.keep=TRUE, results='hide'}
+ggplot() +
+    geom_line(aes(x=1:456, y=diff(diff(log(train_series$ILI),52))))
+acf2(diff(diff(log(train_series$ILI),52)),200)
+```
+
+Differenced non-log data with seasonal differencing
+
+```{r diff diff, echo=FALSE, fig.keep=TRUE, results='hide'}
+ggplot() +
+    geom_line(aes(x=1:456, y=diff(diff(train_series$ILI),52)))
+acf2(diff(diff(train_series$ILI),52),200)
+```
+
+These all look varying levels of stationary to us... what do the SARIMA models for each show? We would expect it to be poor for the raw data -- since it is clearly not stationary -- but the others could all work or not.
+
+Raw data SARIMA:
+
+```{r raw sarima, echo=FALSE, fig.keep=TRUE}
+ILI_auto_arima <- auto.arima(train_series$ILI,
+                             stepwise = FALSE,
+                             approximation = FALSE,
+                             trace=FALSE,
+                             seasonal=TRUE)
+arimaorder(ILI_auto_arima)
+```
+
+```{r, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(train_series$ILI, 2,0,0,0,0,0,0)
+```
+
+The p values for Ljung-Box look terrible; lets try forcing some seasonality:
+
+```{r raw seasonal sarima, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(train_series$ILI, 2,0,0,0,1,0,52)
+```
+
+Still not good.
+
+Differenced data SARIMA:
+
+```{r diff sarima, echo=FALSE}
+ILI_auto_arima <- auto.arima(diff(train_series$ILI),
+                             stepwise = FALSE,
+                             approximation = FALSE,
+                             trace=FALSE)
+arimaorder(ILI_auto_arima)
+```
+
+```{r, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(diff(train_series$ILI), 2,0,0,0,0,0,0)
+```
+
+With a seasonal period of 52:
+
+```{r diff seasonal sarima, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(diff(train_series$ILI), 2,0,0,0,1,0,52)
+```
+
+Differenced log data SARIMA:
+
+```{r diff log sarima, echo=FALSE}
+ILI_auto_arima <- auto.arima(diff(log(train_series$ILI)),
+                             stepwise = FALSE,
+                             approximation = FALSE,
+                             trace=FALSE)
+arimaorder(ILI_auto_arima)
+```
+
+```{r, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(diff(log(train_series$ILI)), 1,0,1,0,0,0,0)
+```
+
+With a seasonal period of 52:
+
+```{r diff log seasonal sarima, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(diff(log(train_series$ILI)), 1,0,1,0,1,0,52)
+```
+
+That is pretty good!
+
+Differenced log data with seasonal differencing SARIMA:
+
+```{r diff diff log sarima, echo=FALSE}
+ILI_auto_arima <- auto.arima(diff(diff(log(train_series$ILI)),52),
+                             stepwise = FALSE,
+                             approximation = FALSE,
+                             trace=FALSE)
+arimaorder(ILI_auto_arima)
+```
+
+```{r, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(diff(diff(log(train_series$ILI)),52), 2,0,2,0,0,0,0)
+```
+
+Somehow this pre-differenced data doesn't help much.
+
+Differenced non-log data with seasonal differencing SARIMA:
+
+```{r diff diff sarima, echo=FALSE}
+ILI_auto_arima <- auto.arima(diff(diff(train_series$ILI),52),
+                             stepwise = FALSE,
+                             approximation = FALSE,
+                             trace=FALSE)
+arimaorder(ILI_auto_arima)
+```
+
+```{r, echo=FALSE, fig.keep=TRUE, results='hide'}
+sarima(diff(diff(train_series$ILI),52), 4,0,0,0,0,0,0)
+```
