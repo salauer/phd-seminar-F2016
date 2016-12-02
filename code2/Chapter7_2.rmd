@@ -1,6 +1,6 @@
 ---
 title: "Chapter 7  Statistical Methods in the Frequency Domain - Part II"
-author: "Stephen Lauer, Rui Zhang"
+author: "Stephen Lauer,  Rui Zhang"
 date: "December 09, 2016"
 output: beamer_presentation
 ---
