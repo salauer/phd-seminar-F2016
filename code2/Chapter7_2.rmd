@@ -1,0 +1,677 @@
+---
+title: "Chapter 7  Statistical Methods in the Frequency Domain - Part II"
+author: "Stephen Lauer, Rui Zhang"
+date: "December 9, 2016"
+output: beamer_presentation
+---
+```{r, echo=FALSE, warning=FALSE}
+library(astsa)
+library(ggplot2)
+```
+
+## Contents
+
+- Analysis of Designed Experiments
+- Discrimination and Cluster Anlysis
+- Principal Components and Factor Analysis
+- The Spectral Envelope
+
+## Example 1 (7.7): Means Test for the fMRI Data
+
+```{r example-1, echo=FALSE}
+n = 128 # length of series
+n.freq = 1 + n/2 # number of frequencies
+Fr = (0:(n.freq-1))/n # the frequencies (cycles per second)
+N = c(5,4,5,3,5,4) # number of series for each cell 
+n.subject = sum(N) # number of subjects (26)
+n.trt = 6 # number of treatments
+L = 3 # for smoothing
+num.df = 2*L*(n.trt-1) # df for F test
+den.df = 2*L*(n.subject-n.trt)
+# Design Matrix (Z):
+Z1 = outer(rep(1,N[1]), c(1,1,0,0,0,0))
+Z2 = outer(rep(1,N[2]), c(1,0,1,0,0,0))
+Z3 = outer(rep(1,N[3]), c(1,0,0,1,0,0))
+Z4 = outer(rep(1,N[4]), c(1,0,0,0,1,0))
+Z5 = outer(rep(1,N[5]), c(1,0,0,0,0,1))
+Z6 = outer(rep(1,N[6]), c(1,-1,-1,-1,-1,-1)) 
+Z = rbind(Z1, Z2, Z3, Z4, Z5, Z6)
+ZZ = t(Z)%*%Z
+SSEF <- rep(NA, n) -> SSER
+HatF = Z%*%solve(ZZ, t(Z))
+HatR = Z[,1]%*%t(Z[,1])/ZZ[1,1]
+par(mfrow=c(3,3), mar=c(3.5,4,0,0), oma=c(0,0,2,2), mgp =
+        c(1.6,.6,0))
+loc.name = c("Cortex 1","Cortex 2","Cortex 3","Cortex
+             4","Caudate","Thalamus 1","Thalamus 2","Cerebellum
+             1","Cerebellum 2")
+for(Loc in 1:9) {
+    i = n.trt*(Loc-1)
+    Y = cbind(fmri[[i+1]], fmri[[i+2]], fmri[[i+3]], fmri[[i+4]],
+              fmri[[i+5]], fmri[[i+6]])
+    Y = mvfft(spec.taper(Y, p=.5))/sqrt(n) 
+    Y=t(Y) #Y is now 26 x 128FFTs
+    # Calculation of Error Spectra
+    for (k in 1:n) {
+        SSY = Re(Conj(t(Y[,k]))%*%Y[,k])
+        SSReg = Re(Conj(t(Y[,k]))%*%HatF%*%Y[,k])
+        SSEF[k] = SSY - SSReg
+        SSReg = Re(Conj(t(Y[,k]))%*%HatR%*%Y[,k])
+        SSER[k] = SSY - SSReg  }
+    # Smooth
+    sSSEF = filter(SSEF, rep(1/L, L), circular = TRUE)
+    sSSER = filter(SSER, rep(1/L, L), circular = TRUE)
+    eF =(den.df/num.df)*(sSSER-sSSEF)/sSSEF
+    plot(Fr, eF[1:n.freq], type="l", xlab="Frequency", ylab="F
+       Statistic", ylim=c(0,7))
+    abline(h=qf(.999, num.df, den.df),lty=2)
+    text(.25, 6.5, loc.name[Loc], cex=1.2)   }
+```
+
+## Means Test for the fMRI Example (Cont'd)
+- F-statistics;
+- See substantial signals for the four cortex locations and for the second cerebellum trace, i.e.,the means were different for the four cortex locations and for the seond cerebellum. But the effects are nonsignificant in the caudate and thalamus.
+
+## Example 2 (7.8) Analysis of Power Tests for the fMRI Series
+
+```{r example-2, echo=FALSE}
+n=128;n.freq=1+n/2
+Fr = (0:(n.freq-1))/n; nFr = 1:(n.freq/2)
+N = c(5,4,5,3,5,4); n.subject = sum(N)
+n.para = 6 # number of parameters
+L=3
+df.stm=2*L*(3-1) # stimulus (3 levels: Brush,Heat,Shock) 
+df.con=2*L*(2-1) # conscious (2 levels: Awake,Sedated)
+df.int=2*L*(3-1)*(2-1) # interaction
+den.df= 2*L*(n.subject-n.para) # df for full model 
+# Design Matrix: mu a1 a2 b g1 g2
+Z1 = outer(rep(1,N[1]), c(1,  1,  0,  1,  1,  0))
+Z2 = outer(rep(1,N[2]), c(1,  0,  1,  1,  0,  1))
+Z3 = outer(rep(1,N[3]), c(1, -1, -1,  1, -1, -1))
+Z4 = outer(rep(1,N[4]), c(1,  1,  0, -1, -1,  0))
+Z5 = outer(rep(1,N[5]), c(1,  0,  1, -1,  0, -1))
+Z6 = outer(rep(1,N[6]), c(1, -1, -1, -1,  1,  1))
+Z = rbind(Z1, Z2, Z3, Z4, Z5, Z6);  ZZ = t(Z)%*%Z
+rep(NA, n)-> SSEF-> SSE.stm-> SSE.con-> SSE.int
+HatF = Z%*%solve(ZZ,t(Z))
+Hat.stm = Z[,-(2:3)]%*%solve(ZZ[-(2:3),-(2:3)], t(Z[,-(2:3)]))
+Hat.con = Z[,-4]%*%solve(ZZ[-4,-4], t(Z[,-4]))
+Hat.int = Z[,-(5:6)]%*%solve(ZZ[-(5:6),-(5:6)], t(Z[,-(5:6)]))
+par(mfrow=c(5,3), mar=c(3.5,4,0,0), oma=c(0,0,2,2), mgp =
+        c(1.6,.6,0))
+loc.name = c("Cortex 1","Cortex 2","Cortex 3","Cortex 4","Caudate",
+             "Thalamus 1","Thalamus 2","Cerebellum 1","Cerebellum 2") 
+for(Loc in c(1:4,9)) { # only Loc 1 to 4 and 9 used
+    i = 6*(Loc-1)
+    Y = cbind(fmri[[i+1]], fmri[[i+2]], fmri[[i+3]], fmri[[i+4]],
+              fmri[[i+5]], fmri[[i+6]])
+    Y = mvfft(spec.taper(Y, p=.5))/sqrt(n);  Y = t(Y)
+    for (k in 1:n) {
+        SSY=Re(Conj(t(Y[,k]))%*%Y[,k])
+        SSReg= Re(Conj(t(Y[,k]))%*%HatF%*%Y[,k])
+        SSEF[k]=SSY-SSReg
+        SSReg=Re(Conj(t(Y[,k]))%*%Hat.stm%*%Y[,k])
+        SSE.stm[k] = SSY-SSReg
+        SSReg=Re(Conj(t(Y[,k]))%*%Hat.con%*%Y[,k])
+        SSE.con[k]=SSY-SSReg
+        SSReg=Re(Conj(t(Y[,k]))%*%Hat.int%*%Y[,k])
+        SSE.int[k]=SSY-SSReg   }
+    # Smooth
+    sSSEF = filter(SSEF, rep(1/L, L), circular = TRUE)
+    sSSE.stm = filter(SSE.stm, rep(1/L, L), circular = TRUE)
+    sSSE.con = filter(SSE.con, rep(1/L, L), circular = TRUE)
+    sSSE.int = filter(SSE.int, rep(1/L, L), circular = TRUE)
+    eF.stm =(den.df/df.stm)*(sSSE.stm-sSSEF)/sSSEF
+    eF.con =(den.df/df.con)*(sSSE.con-sSSEF)/sSSEF
+    eF.int =(den.df/df.int)*(sSSE.int-sSSEF)/sSSEF
+    plot(Fr[nFr], eF.stm[nFr], type="l", xlab="Frequency", ylab="F Statistic", ylim=c(0,12))
+    abline(h=qf(.999, df.stm, den.df),lty=2)
+    if(Loc==1) mtext("Stimulus", side=3, line=.3, cex=1)
+    mtext(loc.name[Loc], side=2, line=3, cex=.9)
+    plot(Fr[nFr], eF.con[nFr], type="l", xlab="Frequency", ylab="F
+Statistic", ylim=c(0,12))
+    abline(h=qf(.999, df.con, den.df),lty=2)
+    if(Loc==1) mtext("Consciousness", side=3, line=.3, cex=1)
+    plot(Fr[nFr], eF.int[nFr], type="l", xlab="Frequency", ylab="F
+Statistic", ylim=c(0,12))
+    abline(h=qf(.999, df.int, den.df),lty=2)
+    if(Loc==1) mtext("Interaction", side=3, line= .3, cex=1) }
+```
+
+## Analysis of Power Tests for the fMRI Series Example (Cont'd)
+- Testing whether the mean differences are because of the nature of the stimulus or the consciousness level, or perhaps due to an interaction between the two factors;
+- The state of consciousness (Awake, Sedate) has the major effect at the signal frequency. The  level of stimulus was less significant at the signal frequency. However, a significant interaction occurred at the ipsilateral component of the primary somatosensory cortex location.
+
+## Example 3 (7.9) Simultaneous Inference for the fMRI Series
+```{r example-3, echo=FALSE}
+n=128;n.freq=1+n/2
+Fr = (0:(n.freq-1))/n; nFr = 1:(n.freq/2)
+N = c(5,4,5,3,5,4); n.subject = sum(N); L = 3
+# Design Matrix
+Z1 = outer(rep(1,N[1]), c(1,0,0,0,0,0)) 
+Z2 = outer(rep(1,N[2]), c(0,1,0,0,0,0)) 
+Z3 = outer(rep(1,N[3]), c(0,0,1,0,0,0)) 
+Z4 = outer(rep(1,N[4]), c(0,0,0,1,0,0)) 
+Z5 = outer(rep(1,N[5]), c(0,0,0,0,1,0))
+Z6 = outer(rep(1,N[6]), c(0,0,0,0,0,1))
+Z = rbind(Z1, Z2, Z3, Z4, Z5, Z6); 
+ZZ = t(Z)%*%Z
+# Contrasts: 6 by 3
+A = rbind(diag(1,3), diag(1,3))
+nq = nrow(A); num.df = 2*L*nq; den.df = 2*L*(n.subject-nq) 
+HatF = Z%*%solve(ZZ, t(Z)) # full model
+rep(NA, n)-> SSEF -> SSER; eF = matrix(0,n,3)
+par(mfrow=c(5,3), mar=c(3.5,4,0,0), oma=c(0,0,2,2), mgp =
+        c(1.6,.6,0))
+loc.name = c("Cortex 1", "Cortex 2", "Cortex 3", "Cortex 4",
+             "Caudate", "Thalamus 1", "Thalamus 2", "Cerebellum 1",
+             "Cerebellum 2")
+cond.name = c("Brush", "Heat", "Shock")
+for(Loc in c(1:4,9)) {
+    i = 6*(Loc-1)
+    Y = cbind(fmri[[i+1]], fmri[[i+2]], fmri[[i+3]], fmri[[i+4]],
+              fmri[[i+5]], fmri[[i+6]])
+    Y = mvfft(spec.taper(Y, p=.5))/sqrt(n); Y = t(Y)
+    for (cond in 1:3){
+        Q = t(A[,cond])%*%solve(ZZ, A[,cond])
+        HR = A[,cond]%*%solve(ZZ, t(Z))
+        for (k in 1:n){
+            SSY = Re(Conj(t(Y[,k]))%*%Y[,k])
+            SSReg = Re(Conj(t(Y[,k]))%*%HatF%*%Y[,k])
+            SSEF[k] = (SSY-SSReg)*Q
+            SSReg = HR%*%Y[,k]
+            SSER[k] = Re(SSReg*Conj(SSReg))  }
+        # Smooth
+        sSSEF = filter(SSEF, rep(1/L, L), circular = TRUE)
+        sSSER = filter(SSER, rep(1/L, L), circular = TRUE)
+        eF[,cond] = (den.df/num.df)*(sSSER/sSSEF)   }
+    plot(Fr[nFr], eF[nFr,1], type="l", xlab="Frequency", ylab="F
+       Statistic", ylim=c(0,5))
+    abline(h=qf(.999, num.df, den.df),lty=2)
+    if(Loc==1) mtext("Brush", side=3, line=.3, cex=1)
+    mtext(loc.name[Loc], side=2, line=3, cex=.9)
+    plot(Fr[nFr], eF[nFr,2], type="l", xlab="Frequency", ylab="F
+       Statistic", ylim=c(0,5))
+    abline(h=qf(.999, num.df, den.df),lty=2)
+    if(Loc==1)  mtext("Heat", side=3, line=.3, cex=1)
+    plot(Fr[nFr], eF[nFr,3], type="l", xlab="Frequency", ylab="F
+       Statistic", ylim=c(0,5))
+    abline(h = qf(.999, num.df, den.df) ,lty=2)
+    if(Loc==1) mtext("Shock", side=3, line=.3, cex=1)  }
+```
+
+## Simultaneous Inference for the fMRI Series Example (Cont'd)
+- See that at the first and third cortex locations, brush and heat are both significant, whereas the fourth cortex shows only brush and the second cerebellum shows only heat;
+- Shock appears to be transmitted relatively weakly, when averaged over the awake and mildly anesthetized states.
+
+## Example 4 (7.10) Equality of Means and Spectral Matrices for Earthquakes and Explosions
+```{r example-4, echo=FALSE}
+P=1:1024; S=P+1024; N=8; n=1024; p.dim=2; m=10; L=2*m+1 
+eq.P = as.ts(eqexp[P,1:8]); eq.S = as.ts(eqexp[S,1:8])
+eq.m = cbind(rowMeans(eq.P), rowMeans(eq.S))
+ex.P = as.ts(eqexp[P,9:16]); ex.S = as.ts(eqexp[S,9:16]) 
+ex.m = cbind(rowMeans(ex.P), rowMeans(ex.S))
+m.diff = mvfft(eq.m - ex.m)/sqrt(n) 
+eq.Pf = mvfft(eq.P-eq.m[,1])/sqrt(n) 
+eq.Sf = mvfft(eq.S-eq.m[,2])/sqrt(n) 
+ex.Pf = mvfft(ex.P-ex.m[,1])/sqrt(n)
+ex.Sf = mvfft(ex.S-ex.m[,2])/sqrt(n)
+fv11=rowSums(eq.Pf*Conj(eq.Pf))+rowSums(ex.Pf*Conj(ex.Pf))/(2*(N-1)) 
+fv12=rowSums(eq.Pf*Conj(eq.Sf))+rowSums(ex.Pf*Conj(ex.Sf))/(2*(N-1)) 
+fv22=rowSums(eq.Sf*Conj(eq.Sf))+rowSums(ex.Sf*Conj(ex.Sf))/(2*(N-1)) 
+fv21 = Conj(fv12)
+# Equal Means
+T2 = rep(NA, 512)
+for (k in 1:512){
+    fvk = matrix(c(fv11[k], fv21[k], fv12[k], fv22[k]), 2, 2)
+    dk = as.matrix(m.diff[k,])
+    T2[k] = Re((N/2)*Conj(t(dk))%*%solve(fvk,dk)) }
+eF = T2*(2*p.dim*(N-1))/(2*N-p.dim-1)
+par(mfrow=c(2,2), mar=c(3,3,2,1), mgp = c(1.6,.6,0), cex.main=1.1)
+freq = 40*(0:511)/n # Hz
+plot(freq, eF, type="l", xlab="Frequency (Hz)", ylab="F Statistic",
+     main="Equal Means")
+abline(h=qf(.999, 2*p.dim, 2*(2*N-p.dim-1)))
+# Equal P
+kd = kernel("daniell",m);
+u = Re(rowSums(eq.Pf*Conj(eq.Pf))/(N-1))
+feq.P = kernapply(u, kd, circular=TRUE)
+u = Re(rowSums(ex.Pf*Conj(ex.Pf))/(N-1))
+fex.P = kernapply(u, kd, circular=TRUE)
+plot(freq, feq.P[1:512]/fex.P[1:512], type="l", xlab="Frequency
+        (Hz)", ylab="F Statistic", main="Equal P-Spectra")
+abline(h=qf(.999, 2*L*(N-1), 2*L*(N-1)))
+# Equal S
+u = Re(rowSums(eq.Sf*Conj(eq.Sf))/(N-1))
+feq.S = kernapply(u, kd, circular=TRUE)
+u = Re(rowSums(ex.Sf*Conj(ex.Sf))/(N-1))
+fex.S = kernapply(u, kd, circular=TRUE)
+plot(freq, feq.S[1:512]/fex.S[1:512], type="l", xlab="Frequency
+        (Hz)", ylab="F Statistic", main="Equal S-Spectra")
+abline(h=qf(.999, 2*L*(N-1), 2*L*(N-1)))
+# Equal Spectra
+u = rowSums(eq.Pf*Conj(eq.Sf))/(N-1)
+feq.PS = kernapply(u, kd, circular=TRUE)
+u = rowSums(ex.Pf*Conj(ex.Sf)/(N-1))
+fex.PS = kernapply(u, kd, circular=TRUE)
+fv11 = kernapply(fv11, kd, circular=TRUE)
+fv22 = kernapply(fv22, kd, circular=TRUE)
+fv12 = kernapply(fv12, kd, circular=TRUE)
+Mi = L*(N-1); M = 2*Mi
+TS = rep(NA,512)
+for (k in 1:512){
+    det.feq.k= Re(feq.P[k]*feq.S[k] - feq.PS[k]*Conj(feq.PS[k]))
+    det.fex.k= Re(fex.P[k]*fex.S[k] - fex.PS[k]*Conj(fex.PS[k]))
+    det.fv.k = Re(fv11[k]*fv22[k] - fv12[k]*Conj(fv12[k]))
+    log.n1 = log(M)*(M*p.dim); log.d1 = log(Mi)*(2*Mi*p.dim)
+    log.n2 = log(Mi)*2 +log(det.feq.k)*Mi + log(det.fex.k)*Mi
+    log.d2 = (log(M)+log(det.fv.k))*M
+    r = 1 - ((p.dim+1)*(p.dim-1)/6*p.dim*(2-1))*(2/Mi - 1/M)
+    TS[k] = -2*r*(log.n1+log.n2-log.d1-log.d2) }
+plot(freq, TS, type="l", xlab="Frequency (Hz)", ylab="Chi-Sq
+    Statistic", main="Equal Spectral Matrices")
+abline(h = qchisq(.9999, p.dim^2))
+```
+
+## Equality of Means and Spectral Matrices for Earthquakes and Explosions Example (Cont'd)
+- The upper left panel of the Figure shows the test statistic $F_{2p,2(N_{1}+N_{2}-p-1)}=\frac{N_{1}+N_{2}-2}{N_{1}+N_{2}-p-1}T^{2}$ with the straight line denoting the critical level for $\alpha=.001$, i.e., $F(4,26)=7.36$, for equal means using $L=1$, and the test statistics remains well below its critical value at all frequencies, implying that the means of the two classes of series are not significantly different;
+- Checking the equality of the spectra and the spectral matrices, however, leads to a different conclusion. Testing equality of the spectral matrices using $\chi_{.001}^{2}(4)=18.47$ shows a similar strong rejection of the equality of spectral matrices.
+
+## Example 5 (7.11) Discriminant Analysis Using Amplitudes from Earthquakes and Explosions
+```{r example-5, echo=FALSE}
+P = 1:1024; S = P+1024
+mag.P = log10(apply(eqexp[P,], 2, max) - apply(eqexp[P,], 2, min))
+mag.S = log10(apply(eqexp[S,], 2, max) - apply(eqexp[S,], 2, min))
+eq.P = mag.P[1:8]; eq.S = mag.S[1:8]
+ex.P = mag.P[9:16]; ex.S = mag.S[9:16]
+NZ.P = mag.P[17]; NZ.S = mag.S[17]
+# Compute linear discriminant function
+cov.eq = var(cbind(eq.P, eq.S))
+cov.ex = var(cbind(ex.P, ex.S))
+cov.pooled = (cov.ex + cov.eq)/2
+means.eq = colMeans(cbind(eq.P, eq.S))
+means.ex = colMeans(cbind(ex.P, ex.S))
+slopes.eq = solve(cov.pooled, means.eq)
+inter.eq = -sum(slopes.eq*means.eq)/2
+slopes.ex = solve(cov.pooled, means.ex)
+inter.ex = -sum(slopes.ex*means.ex)/2
+d.slopes = slopes.eq - slopes.ex
+d.inter = inter.eq - inter.ex
+# Classify new observation
+new.data = cbind(NZ.P, NZ.S)
+d = sum(d.slopes*new.data) + d.inter
+post.eq = exp(d)/(1+exp(d))
+# Print (disc function, posteriors) and plot results
+# cat(d.slopes[1], "mag.P +" , d.slopes[2], "mag.S +" , d.inter,"\n")
+# cat("P(EQ|data) =", post.eq, " P(EX|data) =", 1-post.eq, "\n" )
+plot(eq.P, eq.S, xlim=c(0,1.5), ylim=c(.75,1.25), xlab="log
+    mag(P)", ylab ="log mag(S)", pch = 8, cex=1.1, lwd=2,
+    main="Classification Based on Magnitude Features")
+points(ex.P, ex.S, pch = 6, cex=1.1, lwd=2)
+points(new.data, pch = 3, cex=1.1, lwd=2)
+abline(a = -d.inter/d.slopes[2], b = -d.slopes[1]/d.slopes[2])
+text(eq.P-.07,eq.S+.005, label=names(eqexp[1:8]), cex=.8)
+text(ex.P+.07,ex.S+.003, label=names(eqexp[9:16]), cex=.8)
+text(NZ.P+.05,NZ.S+.003, label=names(eqexp[17]), cex=.8)
+legend("topright",c("EQ","EX","NZ"),pch=c(8,6,3),pt.lwd=2,cex=1.1)
+# Cross-validation
+all.data = rbind(cbind(eq.P, eq.S), cbind(ex.P, ex.S))
+post.eq <- rep(NA, 8) -> post.ex
+for(j in 1:16) {
+    if (j <= 8){
+        samp.eq = all.data[-c(j, 9:16),]
+        samp.ex = all.data[9:16,]
+    }
+    if (j > 8){
+        samp.eq = all.data[1:8,]
+        samp.ex = all.data[-c(j, 1:8),]
+    }
+    df.eq = nrow(samp.eq)-1; df.ex = nrow(samp.ex)-1
+    mean.eq = colMeans(samp.eq); mean.ex = colMeans(samp.ex)
+    cov.eq = var(samp.eq); cov.ex = var(samp.ex)
+    cov.pooled = (df.eq*cov.eq + df.ex*cov.ex)/(df.eq + df.ex)
+    slopes.eq = solve(cov.pooled, mean.eq)
+    inter.eq = -sum(slopes.eq*mean.eq)/2
+    slopes.ex = solve(cov.pooled, mean.ex)
+    inter.ex = -sum(slopes.ex*mean.ex)/2
+    d.slopes = slopes.eq - slopes.ex
+    d.inter = inter.eq - inter.ex
+    d = sum(d.slopes*all.data[j,]) + d.inter
+    if (j <= 8) post.eq[j] = exp(d)/(1+exp(d))
+    if (j > 8) post.ex[j-8] = 1/(1+exp(d))
+}
+Posterior = cbind(1:8, post.eq, 1:8, post.ex)
+colnames(Posterior) = c("EQ","P(EQ|data)","EX","P(EX|data)")
+#round(Posterior,3) # Results from Cross-validation (not shown)
+```
+
+## Discriminant Analysis Using Amplitudes from Earthquakes and Explosions Example (Cont'd)
+- Classification of earthquakes and explosions based on linear discriminant analysis using the magnitude features; The tendency of the earthquakes to have higher values for $\log_{10}S$, relative to $\log_{10}P$ has been noted by many and the use of the logarithm of the ratio, i.e.,$\log_{10}P-\log_{10}S$ in some references is a tacit indicator that a linear function of the two parameters will be a useful discriminant.
+- The jackknifed posterior probabilities of being an earthquake for the earthquake group ranged from .621 to 1.000, whereas the explosion probabilities for the explosion group ranged from .717 to 1.000. The unknown event, $NZ$, was classified as an explosion, with posterior probability .960.
+
+## Example 7.12 
+```{r, echo=FALSE}
+P = 1:1024; S = P+1024; p.dim = 2; n =1024
+eq = as.ts(eqexp[, 1:8])
+ex = as.ts(eqexp[, 9:16])
+nz = as.ts(eqexp[, 17])
+f.eq <- f.ex <- array(dim=c(8, 2, 2, 512))
+f.NZ = array(dim=c(2, 2, 512))
+# below calculates determinant for 2x2 Hermitian matrix
+det.c <- function(mat){
+    return(Re(mat[1,1]*mat[2,2]-mat[1,2]*mat[2,1]))
+}
+L = c(15,13,5) # for smoothing
+for (i in 1:8){ # compute spectral matrices
+    f.eq[i,,,] = mvspec(cbind(eq[P,i], eq[S,i]), spans=L, taper=.5, plot=FALSE)$fxx
+    f.ex[i,,,] = mvspec(cbind(ex[P,i], ex[S,i]), spans=L, taper=.5, plot=FALSE)$fxx
+}
+u = mvspec(cbind(nz[P], nz[S]), spans=L, taper=.5, plot=FALSE)
+f.NZ = u$fxx
+bndwidth = u$bandwidth*sqrt(12)*40 # about .75 Hz
+fhat.eq = apply(f.eq, 2:4, mean) # average spectra
+fhat.ex = apply(f.ex, 2:4, mean)
+# plot the average spectra
+par(mfrow=c(2,2), mar=c(3,3,2,1), mgp = c(1.6,.6,0))
+Fr = 40*(1:512)/n
+plot(Fr,Re(fhat.eq[1,1,]),type="l",xlab="Frequency (Hz)",ylab="")
+plot(Fr,Re(fhat.eq[2,2,]),type="l",xlab="Frequency (Hz)",ylab="")
+plot(Fr,Re(fhat.ex[1,1,]),type="l",xlab="Frequency (Hz)",ylab="")
+plot(Fr,Re(fhat.ex[2,2,]),type="l",xlab="Frequency (Hz)",ylab="")
+mtext("Average P-spectra", side=3, line=-1.5, adj=.2, outer=TRUE)
+mtext("Earthquakes", side=2, line=-1, adj=.8, outer=TRUE)
+mtext("Average S-spectra", side=3, line=-1.5, adj=.82, outer=TRUE)
+mtext("Explosions", side=2, line=-1, adj=.2, outer=TRUE)
+par(fig = c(.75, 1, .75, 1), new = TRUE)
+ker = kernel("modified.daniell", L)$coef; ker = c(rev(ker),ker[-1])
+plot((-33:33)/40, ker, type="l", ylab="", xlab="", cex.axis=.7, yaxp=c(0,.04,2))
+```
+
+## Example 7.12 con't
+```{r, echo=FALSE}
+# Choose alpha
+Balpha = rep(0,19)
+for (i in 1:19){ 
+    alf=i/20
+    for (k in 1:256) {
+        Balpha[i]= Balpha[i] + Re(log(det.c(alf*fhat.ex[,,k] + (1-alf)*fhat.eq[,,k])/det.c(fhat.eq[,,k])) - alf*log(det.c(fhat.ex[,,k])/det.c(fhat.eq[,,k])))
+    }
+}
+alf = which.max(Balpha)/20 # alpha = .4
+# Calculate Information Criteria
+rep(0,17) -> KLDiff -> BDiff -> KLeq -> KLex -> Beq -> Bex
+for (i in 1:17){
+    if (i <= 8) f0 = f.eq[i,,,]
+    if (i > 8 & i <= 16) f0 = f.ex[i-8,,,]
+    if (i == 17) f0 = f.NZ
+    for (k in 1:256) { # only use freqs out to .25
+        tr = Re(sum(diag(solve(fhat.eq[,,k],f0[,,k]))))
+        KLeq[i] = KLeq[i] + tr + log(det.c(fhat.eq[,,k])) - log(det.c(f0[,,k]))
+        Beq[i] = Beq[i] + Re(log(det.c(alf*f0[,,k]+(1-alf)*fhat.eq[,,k])/det.c(fhat.eq[,,k])) - alf*log(det.c(f0[,,k])/det.c(fhat.eq[,,k])))
+        tr = Re(sum(diag(solve(fhat.ex[,,k],f0[,,k]))))
+        KLex[i] = KLex[i] + tr + log(det.c(fhat.ex[,,k])) - log(det.c(f0[,,k]))
+        Bex[i] = Bex[i] + Re(log(det.c(alf*f0[,,k]+(1-alf)*fhat.ex[,,k])/det.c(fhat.ex[,,k])) - alf*log(det.c(f0[,,k])/det.c(fhat.ex[,,k])))
+    }
+    KLDiff[i] = (KLeq[i] - KLex[i])/n
+    BDiff[i] = (Beq[i] - Bex[i])/(2*n)
+}
+x.b = max(KLDiff)+.1; x.a = min(KLDiff)-.1
+y.b = max(BDiff)+.01; y.a = min(BDiff)-.01
+# dev.new()
+par(fig = c(0, 1, 0, 1))
+plot(KLDiff[9:16], BDiff[9:16], type="p", xlim=c(x.a,x.b),
+     ylim=c(y.a,y.b), cex=1.1,lwd=2, xlab="Kullback-Leibler Difference",ylab="Chernoff Difference",
+     main="Classification Based on Chernoff and K-L Distances", pch=6)
+points(KLDiff[1:8], BDiff[1:8], pch=8, cex=1.1, lwd=2)
+points(KLDiff[17], BDiff[17], pch=3, cex=1.1, lwd=2)
+legend("topleft", legend=c("EQ", "EX", "NZ"), pch=c(8,6,3),
+       pt.lwd=2)
+abline(h=0, v=0, lty=2, col="gray")
+text(KLDiff[-c(1,2,3,7,14)]-.075, BDiff[-c(1,2,3,7,14)],
+     label=names(eqexp[-c(1,2,3,7,14)]), cex=.7)
+text(KLDiff[c(1,2,3,7,14)]+.075, BDiff[c(1,2,3,7,14)],
+     label=names(eqexp[c(1,2,3,7,14)]), cex=.7)
+```
+
+
+## Example 6 (7.13) Cluster Analysis for Earthquakes and Explosions
+```{r example-6, echo=FALSE}
+library(cluster)
+P = 1:1024; S = P+1024; p.dim = 2; n =1024
+eq = as.ts(eqexp[, 1:8])
+ex = as.ts(eqexp[, 9:16])
+nz = as.ts(eqexp[, 17])
+f = array(dim=c(17, 2, 2, 512))
+L = c(15, 15) # for smoothing
+for (i in 1:8){ # compute spectral matrices
+    f[i,,,] = mvspec(cbind(eq[P,i], eq[S,i]), spans=L, taper=.5, plot=FALSE)$fxx
+    f[i+8,,,] = mvspec(cbind(ex[P,i], ex[S,i]), spans=L, taper=.5, plot=FALSE)$fxx
+}
+f[17,,,] = mvspec(cbind(nz[P], nz[S]), spans=L, taper=.5, plot=FALSE)$fxx 
+JD = matrix(0, 17, 17)
+# Calculate Symmetric Information Criteria
+for (i in 1:16){
+    for (j in (i+1):17){
+        for (k in 1:256) { # only use freqs out to .25 
+            tr1 = Re(sum(diag(solve(f[i,,,k], f[j,,,k])))) 
+            tr2 = Re(sum(diag(solve(f[j,,,k], f[i,,,k])))) 
+            JD[i,j] = JD[i,j] + (tr1 + tr2 - 2*p.dim)}}}
+JD = (JD + t(JD))/n
+colnames(JD) = c(colnames(eq), colnames(ex), "NZ") 
+rownames(JD) = colnames(JD)
+cluster.2 = pam(JD, k = 2, diss = TRUE)
+# summary(cluster.2) # print results
+par(mgp = c(1.6,.6,0), cex=3/4, cex.lab=4/3, cex.main=4/3)
+clusplot(JD, cluster.2$cluster, col.clus=1, labels=3, lines=0,
+         col.p=1, main="Clustering Results for Explosions and Earthquakes")
+text(-7,-.5, "Group I", cex=1.1, font=2)
+text(1, 5, "Group II", cex=1.1, font=2)
+```
+
+
+## Example 7 (7.14) Principal Component Analysis of the fMRI Data
+```{r example-7, echo=FALSE}
+n = 128; Per = abs(mvfft(fmri1[,-1]))^2/n
+par(mfrow=c(2,4),mar=c(3,2,2,1),mgp = c(1.6,.6,0),oma=c(0,1,0,0))
+for (i in 1:8) plot(0:20, Per[1:21,i], type="l", ylim=c(0,8),
+                    main=colnames(fmri1)[i+1], xlab="Cycles",ylab="",xaxp=c(0,20,5))
+mtext("Periodogram", side=2, line=-.3, outer=TRUE, adj=c(.2,.8))
+fxx = mvspec(fmri1[,-1], kernel("daniell", c(1,1)), taper=.5)$fxx
+l.val = rep(NA,64)
+for (k in 1:64) {
+    u = eigen(fxx[,,k], symmetric=TRUE, only.values = TRUE)
+    l.val[k] = u$values[1]} # largest e-value
+dev.new()
+plot(l.val, type="l",xaxp=c(0,64,8), xlab="Cycles (Frequency x 128)", ylab="First Principal Component")
+axis(1, seq(4,60,by=8), labels=FALSE)
+# At freq 4/128
+u = eigen(fxx[,,4], symmetric=TRUE)
+lam=u$values; evec=u$vectors
+lam[1]/sum(lam) # % of variance explained
+sig.e1 = matrix(0,8,8)
+for(l in 2:5){ #last 3 evs are0
+    sig.e1= sig.e1 +
+        lam[l]*evec[,l]%*%Conj(t(evec[,l]))/(lam[1]-lam[l])^2}
+sig.e1 = Re(sig.e1)*lam[1]*sum(kernel("daniell", c(1,1))$coef^2)
+p.val = round(pchisq(2*abs(evec[,1])^2/diag(sig.e1), 2,
+                     lower.tail=FALSE), 3)
+cbind(colnames(fmri1)[-1], abs(evec[,1]), p.val) # table values
+```
+
+## Principal Component Analysis of the fMRI Data Example (Cont'd)
+- In this analysis, we focus primarily on the signal period of 64 seconds, which translates to four cycles in 256 seconds or $\omega = 4/128$ cycles per time point.The figures shows individual peridograms of the series $x_{tk}$ for $k=1,\cdots,8$.
+\begin{table}[ht]
+\caption{Magnitudes of the PC Vectors at the Stimulus Frequency}
+\centering
+\begin{tabular}{c c c c c c c c c}
+\hline
+Location & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8\\
+\hline
+$\hat{e}_{1}(\frac{4}{128})$ & 0.64 & 0.36 & 0.36 & 0.22 & 0.32 & 0.05 & 0.13 & 0.39\\
+\hline
+\end{tabular}
+\end{table}
+The table shows the magnitudes of $\hat{e}_{1}(4/128)$. As expected, the analysis indicates that location 6 is not contributing to the power at this frequency, but surprisingly, the analysis suggests location 5 (cerebellum 1) is responding to the stimulus.
+
+## Example 8 (7.16) Government Spending, Private Investment, and Unemployment
+```{r example-8, echo=FALSE}
+gr = diff(log(ts(econ5, start=1948, frequency=4))) # growth rate
+plot(100*gr, main="Growth Rates (%)")
+# scale each series to have variance 1
+gr = ts(apply(gr,2,scale), freq=4) # scaling strips ts attributes 
+L = c(7,7) # degree of smoothing
+gr.spec = mvspec(gr, spans=L, demean=FALSE, detrend=FALSE, taper=.25)
+# dev.new()
+plot(kernel("modified.daniell", L)) # view the kernel - not shown 
+# dev.new()
+plot(gr.spec, log="no",col=1, main="Individual Spectra", lty=1:5, lwd=2)
+legend("topright", colnames(econ5), lty=1:5, lwd=2)
+# dev.new()
+plot.spec.coherency(gr.spec, ci=NA, main="Squared Coherencies") 
+# PCs
+n.freq = length(gr.spec$freq)
+lam = matrix(0,n.freq,5)
+for (k in 1:n.freq) lam[k,] = eigen(gr.spec$fxx[,,k],
+                                    symmetric=TRUE, only.values=TRUE)$values
+# dev.new()
+par(mfrow=c(2,1), mar=c(4,2,2,1), mgp=c(1.6,.6,0))
+plot(gr.spec$freq, lam[,1], type="l", ylab="", xlab="Frequency",
+     main="First Eigenvalue") 
+abline(v=.25, lty=2)
+plot(gr.spec$freq, lam[,2], type="l", ylab="", xlab="Frequency", main="Second Eigenvalue")
+abline(v=.125, lty=2)
+e.vec1 = eigen(gr.spec$fxx[,,10], symmetric=TRUE)$vectors[,1] 
+e.vec2 = eigen(gr.spec$fxx[,,5], symmetric=TRUE)$vectors[,2] 
+round(Mod(e.vec1), 2); round(Mod(e.vec2), 3)
+```
+
+## Government Spending, Private Investment, and Unemployment Example (Cont'd)
+- Figure shows the seasonally adjusted, quarterly growth rate (as percentages) of five macroeconomic series, unemployment, GNP, consumption, government investment, and private investment in the United States between 1948 and 1988,n = 160 values.
+
+\begin{table}[ht]
+\caption{Magnitudes of the Eigenvectors}
+\centering
+\begin{tabular}{c c c c c c}
+\hline
+Eigenvector & Unemp & GNP & Cons & G.Inv. & P.Inv.\\
+\hline
+$\hat{e}_{1}(\frac{10}{160})$ & 0.53 & 0.50 & 0.51 & 0.06 & 0.44\\
+$\hat{e}_{2}(\frac{5}{160})$ & 0.19 & 0.14 & 0.23 & 0.93 & 0.16\\
+\hline
+\end{tabular}
+\end{table}
+- These values confirm Unemployment, GNP, Consumption, and Private Investment load on the second factor.
+
+## Example 9 (7.18) Dynamic Analysis of the Gene labeled BNRF1 of the Epstein-Barr Virus
+```{r example-9, echo=FALSE}
+u = factor(bnrf1ebv) # first, input the data as factors and then
+x = model.matrix(~u-1)[,1:3] # make an indicator matrix
+# x = x[1:1000,] # select subsequence if desired
+Var = var(x) # var-cov matrix
+xspec = mvspec(x, spans=c(7,7))
+fxxr = Re(xspec$fxx) # fxxr is real(fxx)
+# compute Q = Var^-1/2
+ev = eigen(Var)
+Q = ev$vectors%*%diag(1/sqrt(ev$values))%*%t(ev$vectors)
+# compute spec envelope and scale vectors
+num = xspec$n.used # sample size used for FFT
+nfreq = length(xspec$freq) # number of freqs used
+specenv = matrix(0,nfreq,1) # initialize the spec envelope
+beta = matrix(0,nfreq,3) # initialize the scale vectors
+for (k in 1:nfreq){
+    ev = eigen(2*Q%*%fxxr[,,k]%*%Q/num, symmetric=TRUE)
+    specenv[k] = ev$values[1] # spec env at freq k/n is max evalue
+    b = Q%*%ev$vectors[,1] # beta at freq k/n
+    beta[k,] = b/sqrt(sum(b^2)) } # helps to normalize beta
+# output and graphics
+frequency = xspec$freq
+plot(frequency, 100*specenv, type="l", ylab="Spectral Envelope (%)")
+# add significance threshold to plot
+m = xspec$kernel$m
+etainv = sqrt(sum(xspec$kernel[-m:m]^2))
+thresh = 100*(2/num)*exp(qnorm(.9999)*etainv)*rep(1,nfreq)
+lines(frequency, thresh, lty="dashed", col="blue")
+# details
+output = cbind(frequency, specenv, beta)
+colnames(output) = c("freq","specenv", "A", "C", "G")
+#round(output,3)
+```
+
+## Dynamic Analysis of the Gene labeled BNRF1 of the Epstein-Barr Virus Example (Cont'd)
+Figure shows the spectral envelope estimate of the entire coding sequence (3954 bp long). The figure also shows a strong signal at frequency 1/3; the corresponding optimal scaling was $A = .10$, $C = .61$, $G = .78$, $T = 0$, which indicates the signal is in the strong–weak bonding alphabet, S = {C, G} and W = {A, T}.
+
+## Example 10 (7.19) Residual Analysis
+```{r, echo=FALSE}
+u = arima(diff(log(gnp)), order=c(0,0,2))$resid # residuals
+x = cbind(u, abs(u), u^2) # transformation set
+Var = var(x)
+xspec = mvspec(x, spans=c(5,3), taper=.1)
+fxxr = Re(xspec$fxx); ev = eigen(Var)
+Q = ev$vectors%*%diag(1/sqrt(ev$values))%*%t(ev$vectors)
+num = xspec$n.used; nfreq = length(xspec$freq)
+specenv = matrix(0, nfreq, 1); beta = matrix(0,nfreq,3)
+for (k in 1:nfreq){
+    ev = eigen(2*Q%*%fxxr[,,k]%*%Q/num)
+    specenv[k] = ev$values[1]
+    b = Q%*%ev$vectors[,1]
+    beta[k,] = b/b[1]  }
+# output and graphics
+frequency = xspec$freq
+plot(frequency, 100*specenv, type="l", ylab="Spectral Envelope (%)")
+output = cbind(frequency, specenv, beta)
+colnames(output) = c("freq","specenv","x", "|x|", "x^2")
+#round(output,4) # results (not shown)
+# plot transformation
+b = output[1, 3:5]; g = function(x) b[1]*x+b[2]*abs(x)+b[3]*x^2 
+curve(g, -.04, .04)
+```
+
+## Residual Analysis Example (Cont'd)
+- Using MLE to fit the MA(2) model for the growth rate, $x_{t}$, the estimated model is
+$x_{t} = .008_{(.001)}+.303_{(.065)}\hat\omega_{t-1}+.204_{(.064)}\hat\omega_{t-2}+\hat\omega_{t}$
+- The spectral envelope, used as a diagnostic tool on the residuals, clearly indicates the MA(2) model is not adequate, and that further analysis is warranted. Here, the generating set G = {x, |x|, x2 }—which seems natural for a residual analysis—was used to estimate the spectral envelope for the residuals from the MA(2) fit. 
+- $g(x) = x + 22|x| - 478x^{2}$
+- This transformation is plotted in Figure. The transformation is basically the absolute value (with some slight curvature and asymmetry) for most of the residual values, but the effect of extreme-valued residuals (outliers) is dampened.
+
+## Example 11 (7.20) Optimal Transformations
+```{r, echo=FALSE}
+set.seed(90210)
+u = exp(3*sin(2*pi*1:500*.1) + rnorm(500,0,4)) # the data 
+spec.pgram(u, spans=c(5,3), taper=.5, log="dB")
+dev.new()
+x = cbind(u, sqrt(u), u^(1/3)) # transformation set 
+Var = var(x)
+xspec = mvspec(x, spans=c(5,3), taper=.5)
+fxxr = Re(xspec$fxx)
+ev = eigen(Var)
+Q = ev$vectors%*%diag(1/sqrt(ev$values))%*%t(ev$vectors)
+num = xspec$n.used
+nfreq = length(xspec$freq)
+specenv = matrix(0,nfreq,1)
+beta=matrix(0,nfreq,3)
+for (k in 1:nfreq){
+    ev = eigen(2*Q%*%fxxr[,,k]%*%Q/num) 
+    specenv[k] = ev$values[1]
+    b = Q%*%ev$vectors[,1]
+    beta[k,] = b/sign(b[1]) }
+#Output and Graphics
+frequency = xspec$freq
+plot(frequency, 100*specenv, type="l", ylab="Spectral Envelope (%)")
+m = xspec$kernel$m
+etainv = sqrt(sum(xspec$kernel[-m:m]^2))
+thresh = 100*(2/num)*exp(qnorm(.999)*etainv)*rep(1,nfreq)
+lines(frequency,thresh, lty="dashed", col="blue")
+output = cbind(frequency, specenv, beta)
+colnames(output) = c("freq","specenv","x", "sqrt(x)", "x^(1/3)")
+#round(output,4)
+# Plot Transform
+dev.new()
+b = output[50,3:5]
+g = function(x) 4.5 + b[1]*x+b[2]*sqrt(x)+b[3]*x^(1/3) 
+curve(g, 1, 4000)
+lines(log(1:4000), lty=2)
+```
+
+##  Optimal Transformations Example (Cont'd)
+- In this example, we consider a contrived data set, in which we know the optimal transformation, say, $g_{0}$, and we determine whether the technology can find the transformation when $g_0$ is not in $G$. The data, $x_{t}$, are generated by the nonlinear model $x_{t}=exp\{3sin(2\pi t\omega_{0}+\epsilon_{t})\}$
+- The spectral estimate of data is shown in the Figure and provides no evidence of any dominant frequency, including $\omega_{0}$. 
