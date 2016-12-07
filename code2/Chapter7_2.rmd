@@ -16,6 +16,15 @@ library(ggplot2)
 <!-- - Principal Components and Factor Analysis -->
 <!-- - The Spectral Envelope -->
 
+## Recap
+- Regression with Dterministic Inputs:
+the frequency domain model
+$Y(\omega_{k}) = Z(\omega_{k})B(\omega_{k})+V(\omega_{k})$
+$Y(\omega_{k}) = ZB(\omega_{k})+V(\omega_{k})$
+- Equality of means:
+reduced regression model
+$y_{ijt} = \mu_{t} + v_{ijt}$
+
 ## Example 1 (7.7): Means Test for the fMRI Data
 
 ```{r example-1, echo=FALSE}
@@ -69,8 +78,24 @@ for(Loc in 1:9) {
 ```
 
 ## Means Test for the fMRI Example (Cont'd)
-- F-statistics;
+- F-statistics:$F_{2Lq_{2},2L(N-q)}=\frac{N-q}{q_{2}}\frac{SSR(\omega)}{SSE(\omega)}$;
 - See substantial signals for the four cortex locations and for the second cerebellum trace, i.e.,the means were different for the four cortex locations and for the seond cerebellum. But the effects are nonsignificant in the caudate and thalamus.
+
+## An Analysis of Variance Model
+-regression model $y_{ijkt} = \mu_{t} + \alpha_{it} + \beta_{jt} + \gamma_{ijt} + v_{ijkt}$
+\begin{table}[ht]
+\caption{Rows of the Design Matrix for fMRI Data}
+\centering
+\begin{tabular}{c c c c c c c c c c c c c c c}
+\hline
+\\
+\hline
+\text{Brush} & 1 & 1 & 0 & 1 & 1 & 0 & (5) & 1 & 1 & 0 & -1 & -1 & 0 & (3)\\
+\text{Heat} & 1 & 0 & 1 & 1 & 0 & 1 & (4) & 1 & 0 & 1 & -1 & 0 & -1 & (5)\\
+\text{Shock} & 1 & -1 & -1 & 1 & -1 & -1 & (5) & 1 & -1 & -1 & -1 & 1 & 1 & (4)\\
+\hline
+\end{tabular}
+\end{table}
 
 ## Example 2 (7.8) Analysis of Power Tests for the fMRI Series
 
@@ -140,6 +165,7 @@ Statistic", ylim=c(0,12))
 
 ## Analysis of Power Tests for the fMRI Series Example (Cont'd)
 - Testing whether the mean differences are because of the nature of the stimulus or the consciousness level, or perhaps due to an interaction between the two factors;
+- Analysis of Power (ANOPOW): five locations, $L=3$,$F_{.001}(6,120)=4.04$ for stimulus and $F_{.001}(12,120)=3.02$ for consciousness and interaction.
 - The state of consciousness (Awake, Sedate) has the major effect at the signal frequency. The  level of stimulus was less significant at the signal frequency. However, a significant interaction occurred at the ipsilateral component of the primary somatosensory cortex location.
 
 ## Example 3 (7.9) Simultaneous Inference for the fMRI Series
@@ -201,6 +227,7 @@ for(Loc in c(1:4,9)) {
 ```
 
 ## Simultaneous Inference for the fMRI Series Example (Cont'd)
+- $\hat\psi = A^{*}(\omega_{k})\hat B(\omega_{k}) =\sum \limits_{i=1}^{6} A^{*}_{i}(\omega_{k})Y(\omega_{k})$ 
 - See that at the first and third cortex locations, brush and heat are both significant, whereas the fourth cortex shows only brush and the second cerebellum shows only heat;
 - Shock appears to be transmitted relatively weakly, when averaged over the awake and mildly anesthetized states.
 
