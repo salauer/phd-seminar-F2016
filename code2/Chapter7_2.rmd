@@ -227,8 +227,8 @@ for(Loc in c(1:4,9)) {
 ```
 
 ## Simultaneous Inference for the fMRI Series Example (Cont'd)
-- $\hat\psi = A^{*}(\omega_{k})\hat B(\omega_{k}) =\sum \limits_{i=1}^{6} A^{*}_{i}(\omega_{k})Y(\omega_{k})$ 
-- See that at the first and third cortex locations, brush and heat are both significant, whereas the fourth cortex shows only brush and the second cerebellum shows only heat;
+- means model $\hat\psi = A^{*}(\omega_{k})\hat B(\omega_{k}) =\sum \limits_{i=1}^{6} A^{*}_{i}(\omega_{k})Y_{i\cdot}(\omega_{k})$ 
+- $F_{.001}(36,120)=2.16$See that at the first and third cortex locations, brush and heat are both significant, whereas the fourth cortex shows only brush and the second cerebellum shows only heat;
 - Shock appears to be transmitted relatively weakly, when averaged over the awake and mildly anesthetized states.
 
 ## Example 4 (7.10) Equality of Means and Spectral Matrices for Earthquakes and Explosions
