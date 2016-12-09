@@ -12,19 +12,27 @@ library(ggplot2)
 ## Contents
 
 - Analysis of Designed Experiments
+    - Equality of Means
+    - Analysis of Variance
+    - Simultaneous Inference
 - Discrimination Analysis
+    - Linear Discriminant Analysis
+    - In the Frequency Domain
+
 <!-- and Cluster Anlysis -->
 <!-- - Principal Components and Factor Analysis -->
 <!-- - The Spectral Envelope -->
 
-## Recap
-- Regression with Dterministic Inputs:
-the frequency domain model
-$Y(\omega_{k}) = Z(\omega_{k})B(\omega_{k})+V(\omega_{k})$
-$Y(\omega_{k}) = ZB(\omega_{k})+V(\omega_{k})$
-- Equality of means:
-reduced regression model
-$y_{ijt} = \mu_{t} + v_{ijt}$
+## Equality of Means
+- We want to see if there is a difference in means of blood oxygenation level signals from 3 different stimuli, at 2 levels of consciousness, and in 9 parts of the brain
+- Regression with Deterministic Inputs: frequency domain model
+$$Y(\omega_{k}) = Z(\omega_{k})B(\omega_{k})+V(\omega_{k})$$
+$$y_{ijt}=\mu_t+\alpha_{it}+v_{ijt}$$
+    - where $\mu_t$ is the overall mean, $\alpha_{it}$ is the effect, and $v_{ijt}$ is error
+- Equality of means: reduced regression model
+$$y_{ijt} = \mu_{t} + v_{ijt}$$
+
+- F-statistic: $$F_{2Lq_{2}, 2L(N-q)}=\frac{N-q}{q_{2}}\frac{SSR(\omega)}{SSE(\omega)}$$
 
 ## Example 1 (7.7): Means Test for the fMRI Data
 
@@ -78,24 +86,29 @@ for(Loc in 1:9) {
     text(.25, 6.5, loc.name[Loc], cex=1.2)   }
 ```
 
-## Means Test for the fMRI Example (Cont'd)
-- F-statistics:$F_{2Lq_{2},2L(N-q)}=\frac{N-q}{q_{2}}\frac{SSR(\omega)}{SSE(\omega)}$;
-- See substantial signals for the four cortex locations and for the second cerebellum trace, i.e.,the means were different for the four cortex locations and for the seond cerebellum. But the effects are nonsignificant in the caudate and thalamus.
+<!-- ## Means Test for the fMRI Example (Cont'd) -->
+<!-- - See substantial signals for the four cortex locations and for the second cerebellum trace, i.e.,the means were different for the four cortex locations and for the second cerebellum. But the effects are non-significant in the caudate and thalamus. -->
 
 ## An Analysis of Variance Model
--regression model $y_{ijkt} = \mu_{t} + \alpha_{it} + \beta_{jt} + \gamma_{ijt} + v_{ijkt}$
+- Testing whether the mean differences are because of the nature of the stimulus or the consciousness level, or perhaps due to an interaction between the two factors
+- Regression model
+$$y_{ijkt} = \mu_{t} + \alpha_{it} + \beta_{jt} + \gamma_{ijt} + v_{ijkt}$$
+    - $\alpha_{it}$ is effect level of stimulus
+    - $\beta_{jt}$ is effect level of consciousness
+    - $\gamma_{ijt}$ is effect of stimulus-consciousness interaction
+
 \begin{table}[ht]
-\caption{Rows of the Design Matrix for fMRI Data}
-\centering
-\begin{tabular}{c c c c c c c c c c c c c c c}
+\centering 
+\begin{tabular}{l | c c c c c c c | c c c c c c c}
 \hline
-\\
+& \multicolumn{6}{c}{Awake} & & \multicolumn{6}{c}{Low Anesthesia} & \\
 \hline
-\text{Brush} & 1 & 1 & 0 & 1 & 1 & 0 & (5) & 1 & 1 & 0 & -1 & -1 & 0 & (3)\\
-\text{Heat} & 1 & 0 & 1 & 1 & 0 & 1 & (4) & 1 & 0 & 1 & -1 & 0 & -1 & (5)\\
-\text{Shock} & 1 & -1 & -1 & 1 & -1 & -1 & (5) & 1 & -1 & -1 & -1 & 1 & 1 & (4)\\
+\text{Brush} & 1 & 1 & 0 & 1 & 1 & 0 & (5) & 1 & 1 & 0 & -1 & -1 & 0 & (3) \\
+\text{Heat} & 1 & 0 & 1 & 1 & 0 & 1 & (4) & 1 & 0 & 1 & -1 & 0 & -1 & (5) \\
+\text{Shock} & 1 & -1 & -1 & 1 & -1 & -1 & (5) & 1 & -1 & -1 & -1 & 1 & 1 & (4) \\
 \hline
 \end{tabular}
+\caption{Rows of the Design Matrix for fMRI Data}
 \end{table}
 
 ## Example 2 (7.8) Analysis of Power Tests for the fMRI Series
@@ -164,10 +177,22 @@ Statistic", ylim=c(0,12))
     if(Loc==1) mtext("Interaction", side=3, line= .3, cex=1) }
 ```
 
-## Analysis of Power Tests for the fMRI Series Example (Cont'd)
-- Testing whether the mean differences are because of the nature of the stimulus or the consciousness level, or perhaps due to an interaction between the two factors;
-- Analysis of Power (ANOPOW): five locations, $L=3$,$F_{.001}(6,120)=4.04$ for stimulus and $F_{.001}(12,120)=3.02$ for consciousness and interaction.
-- The state of consciousness (Awake, Sedate) has the major effect at the signal frequency. The  level of stimulus was less significant at the signal frequency. However, a significant interaction occurred at the ipsilateral component of the primary somatosensory cortex location.
+<!-- ## Analysis of Power Tests for the fMRI Series Example (Cont'd) -->
+<!-- <!-- - Analysis of Power (ANOPOW): five locations, $L=3$, $F_{.001}(6,120)=4.04$ for stimulus, and $F_{.001}(12,120)=3.02$ for consciousness and interaction --> -->
+<!-- - Consciousness has a major effect at the signal frequency -->
+<!-- - The level of stimulus was less significant at the signal frequency -->
+<!-- - However, a significant interaction occurred at the ipsilateral component of the primary somatosensory cortex location. -->
+
+## Simultaneous Inference for the fMRI Series Example (Cont'd)
+- Finally, we'd like to evaluate the effect of a particular stimulus, across the levels of other variables
+- Means model: $\hat\psi = A^{*}(\omega_{k})\hat B(\omega_{k}) =\sum \limits_{i=1}^{6} A^{*}_{i}(\omega_{k})Y_{i\cdot}(\omega_{k})$ 
+    - $\mathbf{A}_i$ is a logical indicator for which states are used
+    - $\hat{\mathbf{B}}$ is the estimated vector of regression coefficients
+- For example, to look at the effect of brushing across multiple states of consciousness, set $A_1 = A_4 = 1$ and 0 otherwise
+
+<!-- - $F_{.001}(36,120)=2.16$ -->
+<!-- - See that at the first and third cortex locations, brush and heat are both significant, whereas the fourth cortex shows only brush and the second cerebellum shows only heat -->
+<!-- - Shock appears to be transmitted relatively weakly, when averaged over the awake and mildly anesthetized states. -->
 
 ## Example 3 (7.9) Simultaneous Inference for the fMRI Series
 ```{r example-3, echo=FALSE}
@@ -227,83 +252,78 @@ for(Loc in c(1:4,9)) {
     if(Loc==1) mtext("Shock", side=3, line=.3, cex=1)  }
 ```
 
-## Simultaneous Inference for the fMRI Series Example (Cont'd)
-- means model $\hat\psi = A^{*}(\omega_{k})\hat B(\omega_{k}) =\sum \limits_{i=1}^{6} A^{*}_{i}(\omega_{k})Y_{i\cdot}(\omega_{k})$ 
-- $F_{.001}(36,120)=2.16$See that at the first and third cortex locations, brush and heat are both significant, whereas the fourth cortex shows only brush and the second cerebellum shows only heat;
-- Shock appears to be transmitted relatively weakly, when averaged over the awake and mildly anesthetized states.
+<!-- ## Example 4 (7.10) Equality of Means and Spectral Matrices for Earthquakes and Explosions -->
+<!-- ```{r example-4, echo=FALSE} -->
+<!-- P=1:1024; S=P+1024; N=8; n=1024; p.dim=2; m=10; L=2*m+1  -->
+<!-- eq.P = as.ts(eqexp[P,1:8]); eq.S = as.ts(eqexp[S,1:8]) -->
+<!-- eq.m = cbind(rowMeans(eq.P), rowMeans(eq.S)) -->
+<!-- ex.P = as.ts(eqexp[P,9:16]); ex.S = as.ts(eqexp[S,9:16])  -->
+<!-- ex.m = cbind(rowMeans(ex.P), rowMeans(ex.S)) -->
+<!-- m.diff = mvfft(eq.m - ex.m)/sqrt(n)  -->
+<!-- eq.Pf = mvfft(eq.P-eq.m[,1])/sqrt(n)  -->
+<!-- eq.Sf = mvfft(eq.S-eq.m[,2])/sqrt(n)  -->
+<!-- ex.Pf = mvfft(ex.P-ex.m[,1])/sqrt(n) -->
+<!-- ex.Sf = mvfft(ex.S-ex.m[,2])/sqrt(n) -->
+<!-- fv11=rowSums(eq.Pf*Conj(eq.Pf))+rowSums(ex.Pf*Conj(ex.Pf))/(2*(N-1))  -->
+<!-- fv12=rowSums(eq.Pf*Conj(eq.Sf))+rowSums(ex.Pf*Conj(ex.Sf))/(2*(N-1))  -->
+<!-- fv22=rowSums(eq.Sf*Conj(eq.Sf))+rowSums(ex.Sf*Conj(ex.Sf))/(2*(N-1))  -->
+<!-- fv21 = Conj(fv12) -->
+<!-- # Equal Means -->
+<!-- T2 = rep(NA, 512) -->
+<!-- for (k in 1:512){ -->
+<!--     fvk = matrix(c(fv11[k], fv21[k], fv12[k], fv22[k]), 2, 2) -->
+<!--     dk = as.matrix(m.diff[k,]) -->
+<!--     T2[k] = Re((N/2)*Conj(t(dk))%*%solve(fvk,dk)) } -->
+<!-- eF = T2*(2*p.dim*(N-1))/(2*N-p.dim-1) -->
+<!-- par(mfrow=c(2,2), mar=c(3,3,2,1), mgp = c(1.6,.6,0), cex.main=1.1) -->
+<!-- freq = 40*(0:511)/n # Hz -->
+<!-- plot(freq, eF, type="l", xlab="Frequency (Hz)", ylab="F Statistic", -->
+<!--      main="Equal Means") -->
+<!-- abline(h=qf(.999, 2*p.dim, 2*(2*N-p.dim-1))) -->
+<!-- # Equal P -->
+<!-- kd = kernel("daniell",m); -->
+<!-- u = Re(rowSums(eq.Pf*Conj(eq.Pf))/(N-1)) -->
+<!-- feq.P = kernapply(u, kd, circular=TRUE) -->
+<!-- u = Re(rowSums(ex.Pf*Conj(ex.Pf))/(N-1)) -->
+<!-- fex.P = kernapply(u, kd, circular=TRUE) -->
+<!-- plot(freq, feq.P[1:512]/fex.P[1:512], type="l", xlab="Frequency -->
+<!--         (Hz)", ylab="F Statistic", main="Equal P-Spectra") -->
+<!-- abline(h=qf(.999, 2*L*(N-1), 2*L*(N-1))) -->
+<!-- # Equal S -->
+<!-- u = Re(rowSums(eq.Sf*Conj(eq.Sf))/(N-1)) -->
+<!-- feq.S = kernapply(u, kd, circular=TRUE) -->
+<!-- u = Re(rowSums(ex.Sf*Conj(ex.Sf))/(N-1)) -->
+<!-- fex.S = kernapply(u, kd, circular=TRUE) -->
+<!-- plot(freq, feq.S[1:512]/fex.S[1:512], type="l", xlab="Frequency -->
+<!--         (Hz)", ylab="F Statistic", main="Equal S-Spectra") -->
+<!-- abline(h=qf(.999, 2*L*(N-1), 2*L*(N-1))) -->
+<!-- # Equal Spectra -->
+<!-- u = rowSums(eq.Pf*Conj(eq.Sf))/(N-1) -->
+<!-- feq.PS = kernapply(u, kd, circular=TRUE) -->
+<!-- u = rowSums(ex.Pf*Conj(ex.Sf)/(N-1)) -->
+<!-- fex.PS = kernapply(u, kd, circular=TRUE) -->
+<!-- fv11 = kernapply(fv11, kd, circular=TRUE) -->
+<!-- fv22 = kernapply(fv22, kd, circular=TRUE) -->
+<!-- fv12 = kernapply(fv12, kd, circular=TRUE) -->
+<!-- Mi = L*(N-1); M = 2*Mi -->
+<!-- TS = rep(NA,512) -->
+<!-- for (k in 1:512){ -->
+<!--     det.feq.k= Re(feq.P[k]*feq.S[k] - feq.PS[k]*Conj(feq.PS[k])) -->
+<!--     det.fex.k= Re(fex.P[k]*fex.S[k] - fex.PS[k]*Conj(fex.PS[k])) -->
+<!--     det.fv.k = Re(fv11[k]*fv22[k] - fv12[k]*Conj(fv12[k])) -->
+<!--     log.n1 = log(M)*(M*p.dim); log.d1 = log(Mi)*(2*Mi*p.dim) -->
+<!--     log.n2 = log(Mi)*2 +log(det.feq.k)*Mi + log(det.fex.k)*Mi -->
+<!--     log.d2 = (log(M)+log(det.fv.k))*M -->
+<!--     r = 1 - ((p.dim+1)*(p.dim-1)/6*p.dim*(2-1))*(2/Mi - 1/M) -->
+<!--     TS[k] = -2*r*(log.n1+log.n2-log.d1-log.d2) } -->
+<!-- plot(freq, TS, type="l", xlab="Frequency (Hz)", ylab="Chi-Sq -->
+<!--     Statistic", main="Equal Spectral Matrices") -->
+<!-- abline(h = qchisq(.9999, p.dim^2)) -->
+<!-- ``` -->
 
-## Example 4 (7.10) Equality of Means and Spectral Matrices for Earthquakes and Explosions
-```{r example-4, echo=FALSE}
-P=1:1024; S=P+1024; N=8; n=1024; p.dim=2; m=10; L=2*m+1 
-eq.P = as.ts(eqexp[P,1:8]); eq.S = as.ts(eqexp[S,1:8])
-eq.m = cbind(rowMeans(eq.P), rowMeans(eq.S))
-ex.P = as.ts(eqexp[P,9:16]); ex.S = as.ts(eqexp[S,9:16]) 
-ex.m = cbind(rowMeans(ex.P), rowMeans(ex.S))
-m.diff = mvfft(eq.m - ex.m)/sqrt(n) 
-eq.Pf = mvfft(eq.P-eq.m[,1])/sqrt(n) 
-eq.Sf = mvfft(eq.S-eq.m[,2])/sqrt(n) 
-ex.Pf = mvfft(ex.P-ex.m[,1])/sqrt(n)
-ex.Sf = mvfft(ex.S-ex.m[,2])/sqrt(n)
-fv11=rowSums(eq.Pf*Conj(eq.Pf))+rowSums(ex.Pf*Conj(ex.Pf))/(2*(N-1)) 
-fv12=rowSums(eq.Pf*Conj(eq.Sf))+rowSums(ex.Pf*Conj(ex.Sf))/(2*(N-1)) 
-fv22=rowSums(eq.Sf*Conj(eq.Sf))+rowSums(ex.Sf*Conj(ex.Sf))/(2*(N-1)) 
-fv21 = Conj(fv12)
-# Equal Means
-T2 = rep(NA, 512)
-for (k in 1:512){
-    fvk = matrix(c(fv11[k], fv21[k], fv12[k], fv22[k]), 2, 2)
-    dk = as.matrix(m.diff[k,])
-    T2[k] = Re((N/2)*Conj(t(dk))%*%solve(fvk,dk)) }
-eF = T2*(2*p.dim*(N-1))/(2*N-p.dim-1)
-par(mfrow=c(2,2), mar=c(3,3,2,1), mgp = c(1.6,.6,0), cex.main=1.1)
-freq = 40*(0:511)/n # Hz
-plot(freq, eF, type="l", xlab="Frequency (Hz)", ylab="F Statistic",
-     main="Equal Means")
-abline(h=qf(.999, 2*p.dim, 2*(2*N-p.dim-1)))
-# Equal P
-kd = kernel("daniell",m);
-u = Re(rowSums(eq.Pf*Conj(eq.Pf))/(N-1))
-feq.P = kernapply(u, kd, circular=TRUE)
-u = Re(rowSums(ex.Pf*Conj(ex.Pf))/(N-1))
-fex.P = kernapply(u, kd, circular=TRUE)
-plot(freq, feq.P[1:512]/fex.P[1:512], type="l", xlab="Frequency
-        (Hz)", ylab="F Statistic", main="Equal P-Spectra")
-abline(h=qf(.999, 2*L*(N-1), 2*L*(N-1)))
-# Equal S
-u = Re(rowSums(eq.Sf*Conj(eq.Sf))/(N-1))
-feq.S = kernapply(u, kd, circular=TRUE)
-u = Re(rowSums(ex.Sf*Conj(ex.Sf))/(N-1))
-fex.S = kernapply(u, kd, circular=TRUE)
-plot(freq, feq.S[1:512]/fex.S[1:512], type="l", xlab="Frequency
-        (Hz)", ylab="F Statistic", main="Equal S-Spectra")
-abline(h=qf(.999, 2*L*(N-1), 2*L*(N-1)))
-# Equal Spectra
-u = rowSums(eq.Pf*Conj(eq.Sf))/(N-1)
-feq.PS = kernapply(u, kd, circular=TRUE)
-u = rowSums(ex.Pf*Conj(ex.Sf)/(N-1))
-fex.PS = kernapply(u, kd, circular=TRUE)
-fv11 = kernapply(fv11, kd, circular=TRUE)
-fv22 = kernapply(fv22, kd, circular=TRUE)
-fv12 = kernapply(fv12, kd, circular=TRUE)
-Mi = L*(N-1); M = 2*Mi
-TS = rep(NA,512)
-for (k in 1:512){
-    det.feq.k= Re(feq.P[k]*feq.S[k] - feq.PS[k]*Conj(feq.PS[k]))
-    det.fex.k= Re(fex.P[k]*fex.S[k] - fex.PS[k]*Conj(fex.PS[k]))
-    det.fv.k = Re(fv11[k]*fv22[k] - fv12[k]*Conj(fv12[k]))
-    log.n1 = log(M)*(M*p.dim); log.d1 = log(Mi)*(2*Mi*p.dim)
-    log.n2 = log(Mi)*2 +log(det.feq.k)*Mi + log(det.fex.k)*Mi
-    log.d2 = (log(M)+log(det.fv.k))*M
-    r = 1 - ((p.dim+1)*(p.dim-1)/6*p.dim*(2-1))*(2/Mi - 1/M)
-    TS[k] = -2*r*(log.n1+log.n2-log.d1-log.d2) }
-plot(freq, TS, type="l", xlab="Frequency (Hz)", ylab="Chi-Sq
-    Statistic", main="Equal Spectral Matrices")
-abline(h = qchisq(.9999, p.dim^2))
-```
-
-## Equality of Means and Spectral Matrices for Earthquakes and Explosions Example (Cont'd)
-- The upper left panel of the Figure shows the test statistic $F_{2p,2(N_{1}+N_{2}-p-1)}=\frac{N_{1}+N_{2}-2}{N_{1}+N_{2}-p-1}T^{2}$ with the straight line denoting the critical level for $\alpha=.001$, i.e., $F(4,26)=7.36$, for equal means using $L=1$, and the test statistics remains well below its critical value at all frequencies, implying that the means of the two classes of series are not significantly different;
-- Checking the equality of the spectra and the spectral matrices, however, leads to a different conclusion. Testing equality of the spectral matrices using $\chi_{.001}^{2}(4)=18.47$ shows a similar strong rejection of the equality of spectral matrices.
+<!-- ## Equality of Means and Spectral Matrices for Earthquakes and Explosions Example (Cont'd) -->
+<!-- - The upper left panel of the Figure shows the test statistic $F_{2p,2(N_{1}+N_{2}-p-1)}=\frac{N_{1}+N_{2}-2}{N_{1}+N_{2}-p-1}T^{2}$ with the straight line denoting the critical level for $\alpha=.001$, i.e., $F(4,26)=7.36$, for equal means using $L=1$, and the test statistics remains well below its critical value at all frequencies, implying that the means of the two classes of series are not significantly different; -->
+<!-- - Checking the equality of the spectra and the spectral matrices, however, leads to a different conclusion. Testing equality of the spectral matrices using $\chi_{.001}^{2}(4)=18.47$ shows a similar strong rejection of the equality of spectral matrices. -->
 
 ## Discriminant analysis overview
 
