@@ -7,6 +7,7 @@ output: beamer_presentation
 ```{r, echo=FALSE, warning=FALSE}
 library(astsa)
 library(ggplot2)
+library(xtable)
 ```
 
 ## Contents
@@ -366,7 +367,7 @@ $$
 log(\frac{f_1(\mathbf{x})}{f_2(\mathbf{x})})=(\boldsymbol{\mu}_1-\boldsymbol{\mu}_2)^T|\Sigma|^{-1}\mathbf{x}-\frac{1}{2}(\boldsymbol{\mu}_1^T|\Sigma|^{-1}\boldsymbol{\mu}_1-\boldsymbol{\mu}_2^T|\Sigma|^{-1}\boldsymbol{\mu}_2)
 $$
 - If this quantity is larger than $log(\pi_2/\pi_1)$, then $\mathbf{x}$ is in $R_1$, otherwise it is in $R_2$
-- Can use training set mean and covariance in place of $\boldsymbol{\mu}_i$ and $\Sigma_i$
+- Can use training set mean and covariance in place of $\boldsymbol{\mu}_i$ and $\Sigma$
 
 ## Example 5 (7.11) Discriminant Analysis Using Amplitudes from Earthquakes and Explosions
 
@@ -381,7 +382,7 @@ mtext("P waves", side=3, line=1.2, adj=.05, cex=1.2)
 mtext("S waves", side=3, line=1.2, adj=.85, cex=1.2)
 ```
 
-## Example 5 (7.11) Discriminant Analysis Using Amplitudes from Earthquakes and Explosions
+## Cross-validation on training set data
 
 ```{r example-5b, echo=FALSE}
 # find magnitude of P and S for each column
@@ -422,7 +423,7 @@ colnames(Posterior) = c("EQ","P(EQ|data)","EX","P(EX|data)")
 round(Posterior,3) # Results from Cross-validation (not shown)
 ```
 
-## Example 5 (7.11) Discriminant Analysis Using Amplitudes from Earthquakes and Explosions
+## Classifying NZ
 
 ```{r example-5c, echo=FALSE}
 # Compute linear discriminant function
@@ -447,9 +448,9 @@ $log\frac{f_1(\mathbf{x})}{f_2(\mathbf{x})} =$ `r round(d.slopes[1],2)` x mag.P 
 
 $log\frac{f_1(\mathbf{x}_{NZ})}{f_2(\mathbf{x}_{NZ})} =$ `r round(d,2)`
 
-$P(NZ=EQ|data)=$ `r round(post.eq,4)`; $P(NZ=EX|data)=$ `r round(1-post.eq,4)`; 
+$P(NZ=EQ|data)=$ `r round(post.eq,4)`; $P(NZ=EX|data)=$ `r round(1-post.eq,4)`
 
-## Example 5 (7.11) Discriminant Analysis Using Amplitudes from Earthquakes and Explosions
+## Classifying NZ
 
 ```{r example-5d, echo=FALSE}
 plot(eq.P, eq.S, xlim=c(0,1.5), ylim=c(.75,1.25), xlab="log
@@ -465,20 +466,22 @@ legend("topright",c("EQ","EX","NZ"),pch=c(8,6,3),pt.lwd=2,cex=1.1)
 
 ```
 
-<!-- ## Example 5 (7.11) Discriminant Analysis Using Amplitudes from Earthquakes and Explosions -->
+## For fun: comparison to logistic regression
 
-<!-- ```{r example-5d, echo=FALSE} -->
-<!-- eq_dat <- data.frame(earthquake=c(rep(1,8),rep(0,8)), -->
-<!--                      P_mag=c(eq.P,ex.P), -->
-<!--                      S_mag=c(eq.S,ex.S)) -->
-<!-- logistic_fit <- glm(as.factor(earthquake)~.,data=eq_dat, -->
-<!--                     family="binomial") -->
-<!-- summary(logistic_fit) -->
-<!-- nz_dat <- data.frame(earthquake=0.5, -->
-<!--                      P_mag=NZ.P, -->
-<!--                      S_mag=NZ.S) -->
-<!-- predict(logistic_fit,nz_dat, type = "response", se.fit=T) -->
-<!-- ``` -->
+```{r logistic-comparison, echo=FALSE, warning=FALSE, results="asis", message=FALSE}
+eq_dat <- data.frame(earthquake=c(rep(1,8),rep(0,8)),
+                     P_mag=c(eq.P,ex.P),
+                     S_mag=c(eq.S,ex.S))
+logistic_fit <- glm(as.factor(earthquake)~.,data=eq_dat,
+                    family="binomial")
+print(xtable(summary(logistic_fit)), comment=FALSE)
+nz_dat <- data.frame(earthquake=0.5,
+                     P_mag=NZ.P,
+                     S_mag=NZ.S)
+NZ_pred <- predict(logistic_fit,nz_dat, type = "response", se.fit=T)
+
+paste("The prediction for NZ is", signif(NZ_pred$fit,3), ", with standard error", signif(NZ_pred$se.fit,3))
+```
 
 ## Frequency Domain Discrimination
 - Use the discrete Fourier transforms (DFTs) for the time series, $\mathbf{X}(\omega_k)$, as covariates for discrimination
@@ -488,13 +491,40 @@ legend("topright",c("EQ","EX","NZ"),pch=c(8,6,3),pt.lwd=2,cex=1.1)
 ## Frequency likelihood estimation
 - For frequencies, $\omega_k=k/n$, for $k=0,1,n/2$, the log-likelihood can be expressed as ($\omega_k$'s suppressed for brevity):
 $$
-log(g_i(\mathbf{X}))=-\sum_{0<\omega_k<1/2}[log|S_i|+\mathbf{X}^*S_i^{-1}\mathbf{X}-2\mathbf{M}^*_iS_i^{-1}\mathbf{X}+\mathbf{M}^*_iS_i^{-1}\mathbf{M}_i]
+log(f_i(\mathbf{X}))=-\sum_{0<\omega_k<1/2}[log|S_i|+\mathbf{X}^*S_i^{-1}\mathbf{X}-2\mathbf{M}^*_iS_i^{-1}\mathbf{X}+\mathbf{M}^*_iS_i^{-1}\mathbf{M}_i]
 $$
 
 - If $\mathbf{M}_1=\mathbf{M}_2=0$, then:
 $$
-log(\frac{g_1(\mathbf{X})}{g_2(\mathbf{X})})=\sum_{0<\omega_k<1/2}[-log\frac{S_1}{S_2}-tr\{\mathbf{X}^*(S_2^{-1}-S_1^{-1})^{-1}\mathbf{X}\}]
+log(\frac{f_1(\mathbf{X})}{f_2(\mathbf{X})})=\sum_{0<\omega_k<1/2}[-log\frac{|S_1|}{|S_2|}-tr\{\mathbf{X}^*(S_1^{-1}-S_2^{-1})\mathbf{X}\}]
 $$
+
+
+## Measures of disparity: Kullback-Leibler
+
+- Not really sure why we can't compute this quantity, instead we use two measures of disparity that are related to this quantity
+- Kullback-Leibler (K-L) discrimination information:
+$$
+I(\theta_1,\theta_2)=\frac{1}{n}E_1log(\frac{f_1(y;\theta)}{f_2(y;\theta)})
+$$
+    - If $I(\theta_1,\theta_2)=0$, the two probability distributions are the same; positive if the $f_1$ has greater probability
+- Using this, they transform our problem into:
+$$
+\frac{1}{n}E_1log(\frac{f_1(\mathbf{X})}{f_2(\mathbf{X})}) = \frac{1}{n}\sum_{0<\omega_k<1/2}[tr\{\frac{|S_1|}{|S_2|}\}-log(\frac{|S_1|}{|S_2|})-p]
+$$
+    
+## Measures of disparity: Chernoff
+
+- Chernoff (CH) information measure:
+$$
+B_\alpha(y=1,y=2)=-logE_2\{(\frac{f_2(\mathbf{x})}{f_1(\mathbf{x})})^\alpha\}
+$$
+    - which has symmetric divergence when $\alpha=0.5$
+- They transform this into the following for our scenario:
+$$
+B_\alpha=\frac{1}{2n}\sum_{0<\omega_k<1/2}[log(\frac{|\alpha S_1 + (1-\alpha)S_2|}{|S_2|})- \alpha log(\frac{|S_1|}{|S_2|})]
+$$
+    - where the probability that $y=1$ increases as $B_\alpha$ decreases
 
 ## Example 7.12 
 ```{r, echo=FALSE}
