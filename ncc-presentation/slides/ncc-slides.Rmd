@@ -2,7 +2,9 @@
 title: "Assessing Incremental Value of Biomarkers with Multi-Phase Nested Case-Control Studies"
 author: "Yubing Yao, Stephen Lauer"
 date: "March 10, 2017"
-output: beamer_presentation
+output: 
+    beamer_presentation:
+        fig_caption: false
 ---
 
 
@@ -22,7 +24,7 @@ output: beamer_presentation
 
 ## Study Design
 
-![Nurses Health Study: Rheumatoid Arthritis (RA)](figures/nhs-study-design.jpg)
+![](figures/nhs-study-design.jpg)
 
 - 121,700 US female registered nurses aged 30-55 enrolled in 1976
 - 32,826 contributed blood
@@ -30,11 +32,31 @@ output: beamer_presentation
 
 ## Study Design
 
-- 3-phase nested case-control
+![](figures/nhs-study-design.jpg)
+
+- 126 RA patients had blood drawn in 1989/90
+- 337 controls matched on clinical/bloodwork covariates
+- 122 cases and 123 controls (randomly sampled from 337) had blood genotyped in 2004
 
 ## Study Design
 
-- Covariates used
+![](figures/nhs-study-design-2.jpg)
+
+- $T^\dagger$ indicates time from blood draw to disease onset
+- Data from prior to 1989 not used
+- $C$ is right-censored time, unclear if always 2004 or not
+
+## Study Design: Covariates of Interest
+
+- Clinical covariates (taken at time of blood draw)
+    - Age
+    - Smoking (in pack-years)
+    - Alcohol (cumulative intake)
+- Blood sample biomarkers (regarding inflammation)
+    - IL-6
+    - sTNFRII
+- Genetic data
+    - 39 SNPs identified with RA risks
 
 ## Challenges: Sampling
 
