@@ -1,0 +1,174 @@
+---
+title: "Flu Data and Threshold Models"
+output: html_document
+---
+
+#### Introduction
+We chose to use the US flu data to try and explore some of the additional topics presented in Chapter 5 of Shumway's *Time Series Analysis and Its Applications*. You can read more about the data and how to obtain it at <https://predict.phiresearchlab.org/legacy/flu/targets.html> and <https://github.com/cdcepi/flu-tools-2015-16>. We've also provided a short R script *data-pulling.R*, which can be found at the project's [GitHub page](https://github.com/salauer/phd-seminar-F2016).
+
+To start, I noticed that the threshold model was presented in the book also using influenza data, so I chose to explore this topic. My goal was to train a threshold model for years 2003-2011, and test the model on years 2012-2015.
+
+#### The Data
+
+First we need to download necessary libraries and load the data. We also display a plot of the original training data.
+<br><br>
+```{r,warning=FALSE,message=FALSE,fig.width=10}
+library(ggplot2)
+library(readr)
+library(astsa)
+
+usflu <- read.csv("data/train_data.csv", na="X")
+qplot(data=usflu, x=YEAR+(WEEK-1)/53,y=X.UNWEIGHTED.ILI, geom="line")
+usflu2 <- usflu[,c("X","X.UNWEIGHTED.ILI")]
+usflu3 <- usflu2[usflu$YEAR>=2003,]
+```
+<br><br>
+Notice the gaps that occur during non-peak periods up until 2003. To quickly handle this missing data, we choose to subset the data for years 2003-2011. 
+
+The following plot displays the ACF and PACF of the original, untransformed data:
+<br><br>
+```{r,fig.keep=TRUE,results='hide'}
+acf2(usflu3$X.UNWEIGHTED.ILI,max.lag=53)
+```
+<br><br>
+Next, I chose to look at the first difference of the data, and it's corresponding ACF and PACF plot
+<br><br>
+```{r,fig.width=10,fig.keep=TRUE,results='hide'}
+dflu <- diff(usflu3$X.UNWEIGHTED.ILI)
+qplot(x=usflu3$X[-c(1)],y=dflu, geom="line")
+acf2(dflu,max.lag=53)
+```
+
+#### Threshold model (differenced data)
+
+The first thing I decided to try was fit a threshold model to the differenced data. I chose two lags based off the ACF plot, and I choose a threshold of 0.3. The threshold model essentially splits the data into two parts based off of whether or not the first lag is above or below a given threshold. It then fits two AR(2) models based off this criteria.
+
+The following displays the threshold I chose (somewhat arbitrarily). I essentially chose this cutoff to try and separate the peaks from the rest of the time series (stay tuned for how well that worked...):
+<br><br>
+```{r,fig.width=10}
+thresh <- .3
+qplot(x=usflu3$X[-1],y=dflu, geom="line") +
+  geom_hline(aes(yintercept=thresh),colour="red")
+```
+<br><br>
+Once a threshold is chosen, we can fit a threshold model and display the predicted time series superimposed upon the actual time series. To fit the model, I first created a matrix $Z$, which has columns corresponding to the time series in its original format, and then the corresponding first and second lag vectors. Note that this means the first column must start at the third time point...
+<br><br>
+```{r}
+dflu_ts <- ts(dflu)
+Z <- ts.intersect(dflu_ts,lag(dflu_ts,-1),lag(dflu_ts,-2))
+head(dflu_ts)
+head(Z)
+```
+<br><br>
+Next we can create indicator variables for whether or not the first lag is below or above the threshold, and then split the time series into the two corresponding parts. We then fit the two AR models and plot the predictions.
+<br><br>
+```{r,fig.width=10}
+ind1 <- ifelse(Z[,2] < thresh, 1, NA)
+ind2 <- ifelse(Z[,2] >= thresh, 1, NA)
+X1 <- Z[,1]*ind1
+X2 <- Z[,1]*ind2
+fit1 <- lm(X1~Z[,2:3])
+fit2 <- lm(X2~Z[,2:3])
+D <- cbind(1,Z[,2:3])
+coefs1 <- fit1$coefficients
+coefs2 <- fit2$coefficients
+preds <- ifelse(Z[,2] < thresh, D%*%coefs1, D%*%coefs2)
+qplot(x=usflu3$X[-1],y=dflu, geom="line") +
+  geom_line(aes(x=usflu3$X[-c(1:3)],y=preds), colour="red",lty=2)
+```
+<br><br>
+Not being super satisfied with this result, I looked at the summaries of the two fits:
+<br><br>
+```{r}
+summary(fit1)
+summary(fit2)
+```
+
+Not only are none of the coefficients for the *peak* fit significant, it also appears that this model is predicting time point $t$ to go down after time point $t-1$, which we don't want. Looking back at the differenced plot a little closer, this actually makes sense.
+
+My next move was to try a threshold model, based off the original data with no transformations.
+
+#### Threshold model (untransformed data)
+
+To start, I chose a threshold of about 1.25, which seems to separate out the peaks pretty well.
+<br><br>
+```{r,fig.width=10}
+thresh <- 1.25
+qplot(x=usflu3$X,y=usflu3$X.UNWEIGHTED.ILI, geom="line") +
+  geom_hline(aes(yintercept=thresh),colour="red")
+```
+<br><br>
+Next, fit the model, plot predictions, and look at model summaries:
+<br><br>
+```{r,fig.width=10}
+flu_ts <- ts(usflu3$X.UNWEIGHTED.ILI)
+Z <- ts.intersect(flu_ts,lag(flu_ts,-1),lag(flu_ts,-2))
+ind1 <- ifelse(Z[,2] < thresh, 1, NA)
+ind2 <- ifelse(Z[,2] >= thresh, 1, NA)
+X1 <- Z[,1]*ind1
+X2 <- Z[,1]*ind2
+fit1 <- lm(X1~Z[,2:3])
+fit2 <- lm(X2~Z[,2:3])
+D <- cbind(1,Z[,2:3])
+coefs1 <- fit1$coefficients
+coefs2 <- fit2$coefficients
+preds <- ifelse(Z[,2] < thresh, D%*%coefs1, D%*%coefs2)
+qplot(x=usflu3$X,y=usflu3$X.UNWEIGHTED.ILI, geom="line") +
+  geom_line(aes(x=usflu3$X[-c(1:3)],y=preds[-1]), colour="red",lty=2)
+summary(fit1)
+summary(fit2)
+```
+<br><br>
+Notice that the cofficient for *fit2* is greater than one, while the cofficient for *fit1* is less than one.
+<br><br>
+
+**Note** When I first fit this model, I used a threshold of 2 and there was virtually no difference between the two model fits, which led me to fit a simple AR(2) model on all the data. The results were pretty similar....**So the question is, how do you determine an appropriate threshold?**
+
+
+#### Diagnostics and Prediction
+
+Now that I have a model that seems to fit the data well, I decided to look at a residual plot
+<br><br>
+```{r,fig.width=10,warning=FALSE,message=FALSE}
+qplot(x=usflu3$X[-c(1:2)],y=preds-usflu3$X.UNWEIGHTED.ILI[-c(1:2)],geom="line")
+```
+<br><br>
+**How do we interpret this?**
+<br><br><br><br>
+We can next load in the test data set and see how our model performs for one-step-ahead prediction.
+<br><br>
+```{r,fig.width=10}
+test_dat <- read.csv("data/test_data.csv",na="X")
+test_ts <- ts(test_dat$X.UNWEIGHTED.ILI)
+Z_test <- ts.intersect(test_ts,lag(test_ts,-1),lag(test_ts,-2))
+D_test <- cbind(1,Z_test[,2:3])
+preds_test <- ifelse(Z_test[,2] < thresh, D_test%*%coefs1, D_test%*%coefs2)
+qplot(x=test_dat$X,y=test_dat$X.UNWEIGHTED.ILI, geom="line") +
+  geom_line(aes(x=test_dat$X[-c(1:3)],y=preds_test[-1]), colour="blue",lty=2)
+```
+<br><br>
+**What do you think? (I have comments if no one else does...)**
+<br><br><br><br>
+
+For the sake of completeness, let's fit a simple AR(2) model and discuss which model we would choose. We can do this by just changing the threshold to something that lies either completely above or completely below the data, keeping all the data in one part. Here, I chose a threshold of 0.
+
+```{r,fig.width=10}
+thresh <- 0
+flu_ts <- ts(usflu3$X.UNWEIGHTED.ILI)
+Z <- ts.intersect(flu_ts,lag(flu_ts,-1),lag(flu_ts,-2))
+ind1 <- ifelse(Z[,2] < thresh, 1, NA)
+ind2 <- ifelse(Z[,2] >= thresh, 1, NA)
+X1 <- Z[,1]*ind1
+X2 <- Z[,1]*ind2
+fit2 <- lm(X2~Z[,2:3])
+D <- cbind(1,Z[,2:3])
+coefs2 <- fit2$coefficients
+test_ts <- ts(test_dat$X.UNWEIGHTED.ILI)
+Z_test <- ts.intersect(test_ts,lag(test_ts,-1),lag(test_ts,-2))
+D_test <- cbind(1,Z_test[,2:3])
+preds_test <- ifelse(Z_test[,2] < thresh, D_test%*%coefs1, D_test%*%coefs2)
+qplot(x=test_dat$X,y=test_dat$X.UNWEIGHTED.ILI, geom="line") +
+  geom_line(aes(x=test_dat$X[-c(1:3)],y=preds_test[-1]), colour="blue",lty=2)
+summary(fit2)
+```
+

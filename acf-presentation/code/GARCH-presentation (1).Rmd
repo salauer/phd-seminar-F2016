@@ -30,7 +30,7 @@ GARCH is often used on the difference of the log values (roughly the percent cha
 GARCH can be viewed sort of like an ARMA that accounts for non-constant variance.
 Thus, we will first try to fit an ARMA model for the difference of the logs, which is what GARCH is usually performed on.
 
-```{r, echo=FALSE}
+```{r}
 dILI <- as.ts(diff(log(train_series$ILI)))
 
 ILI_auto_arima <- auto.arima(dILI, stepwise = FALSE, approximation = FALSE, trace=FALSE)
