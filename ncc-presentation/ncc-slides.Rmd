@@ -1,0 +1,88 @@
+---
+title: "Assessing Incremental Value of Biomarkers with Multi-Phase Nested Case-Control Studies"
+author: "Yubing Yao, Stephen Lauer"
+date: "March 10, 2017"
+output: beamer_presentation
+---
+
+
+## Contents
+
+- Study Design
+- Challenges
+    - Sampling
+    - Time-varying effects
+    - Evaluation
+- Solutions
+    - Sampling
+    - Time-varying effects
+    - Evaluation
+- Results
+- Simulation (if time)
+
+## Study Design
+
+- Nurses Study overview
+
+## Study Design
+
+- 3-phase nested case-control
+
+## Study Design
+
+- Covariates used
+
+## Challenges: Sampling
+
+- Not simple random sample due to matching
+    - Needs to be accounted for in risk model
+- Further difficulties due to protection of some individuals
+
+## Challenges: Time-varying effects
+
+- Certain biomarkers have strong correlation at short-term predictions, but not long-term predictions
+    - Most survival models ignore this and consider biomarkers time-invariant
+- Also, there are a large number of covariates relative to the subcohort size
+
+## Challenges: Evaluation
+
+- ROC method not available for study designs that are all of the following:
+    - Multi-phase
+    - Time-dependent
+    - Multivariate
+    - Accounting for outcome-dependent sampling
+- Need incremental value (IncV) metric for models with and without markers of interest
+    - Didn't exist for 3-phase studies
+    - Sequential finite population sampling induces complex correlation between observations
+    
+## Solutions: Sampling
+
+- Notation?
+
+## Solutions: Sampling
+
+- summary and/or equations
+
+## Solutions: Time-varying effects
+
+
+
+## Solutions: Time-varying effects
+
+
+
+## Solutions: Evaluation (ROC)
+
+## Solutions: Evaluation (IncV)
+
+## Results: Time-varying effects
+
+## Results: ROC
+
+## Simulation: Overview
+
+## Simulation: Overview
+
+## Simulation: Results
+
+## Simulation: Results
