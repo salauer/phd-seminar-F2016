@@ -22,7 +22,11 @@ output: beamer_presentation
 
 ## Study Design
 
-- Nurses Study overview
+![Nurses Health Study: Rheumatoid Arthritis (RA)](figures/nhs-study-design.jpg)
+
+- 121,700 US female registered nurses aged 30-55 enrolled in 1976
+- 32,826 contributed blood
+- 146 contracted RA between 1989/90 and 2004
 
 ## Study Design
 
