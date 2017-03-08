@@ -1,9 +1,18 @@
-execute.fun <- function(data0,NCC.dat,cov.list,model,u0,t0,execute.rtn="ALL",yes.DepCen=F,cov.DepCen=list(Cov=NULL,Stage=NULL),control=list(yes.cv=F,yes.IncV=F)){
-  
+execute.fun <- function(data0,
+                        NCC.dat,
+                        cov.list,model,
+                        u0,
+                        t0,
+                        execute.rtn="ALL",
+                        yes.DepCen=F,
+                        cov.DepCen=list(Cov=NULL,Stage=NULL),
+                        control=list(yes.cv=F,yes.IncV=F)){
   
   n.S = length(cov.list) # number of the stages
-  model.type = model$type; model.family = model$family
-  yes.cv = control$yes.cv; yes.IncV = control$yes.IncV
+  model.type = model$type
+  model.family = model$family
+  yes.cv = control$yes.cv
+  yes.IncV = control$yes.IncV
   
   id = as.character(data0$id); nn = length(id) # id
   xi = as.numeric(data0$time) # event time which might be censored
@@ -11,13 +20,23 @@ execute.fun <- function(data0,NCC.dat,cov.list,model,u0,t0,execute.rtn="ALL",yes
   cov.mat = data0[,-match(c("id","time","delta"),colnames(data0)),drop=F]
   
   col.nm = colnames(NCC.dat)
-  vi.case = as.numeric(NCC.dat$case) # indicate whether sampled to NCC cohort as a case
-  vi.S = as.matrix(NCC.dat[,which(substr(col.nm,1,1)=="S"),drop=F]) # indicate whether sampled to NCC as a case or a control 
-  if (sum(substr(col.nm,1,1)=="M")>0) Mi = as.matrix(NCC.dat[,which(substr(col.nm,1,1)=="M"),drop=F]) else Mi = NULL # Matchiing variables
+  ## indicate whether sampled to NCC cohort as a case
+  vi.case = as.numeric(NCC.dat$case) 
+  ## indicate whether sampled to NCC as a case or a control 
+  vi.S = as.matrix(NCC.dat[,which(substr(col.nm,1,1)=="S"),drop=F]) 
+  
+  if (sum(substr(col.nm,1,1)=="M")>0)
+      Mi = as.matrix(NCC.dat[,which(substr(col.nm,1,1)=="M"),drop=F]) else
+          Mi = NULL # Matching variables
   
   ## === calculate the NCC weighting === ##
-  WGT.NCC.out = WGT.NCC.FUN(data=cbind(id,xi,di,vi.case,vi.S),M.dat=Mi,a.match=a0,m.match=m0)
-  WGT.NCC.out$S0 = list("wgt"=rep(1,nn),"I0kj"=NULL,"m"=Inf)
+  WGT.NCC.out = WGT.NCC.FUN(data=cbind(id,xi,di,vi.case,vi.S),
+                            M.dat=Mi,
+                            a.match=a0,
+                            m.match=m0)
+  WGT.NCC.out$S0 = list("wgt"=rep(1,nn),
+                        "I0kj"=NULL,
+                        "m"=Inf)
   WGT.NCC.out$S1$wgt = WGT.NCC.out$S1$wgt
   WGT.NCC.out$S2$wgt = WGT.NCC.out$S2$wgt
   
@@ -29,14 +48,22 @@ execute.fun <- function(data0,NCC.dat,cov.list,model,u0,t0,execute.rtn="ALL",yes
     Z.DepCen=NULL
     wgt = NULL
   }
-  WGT.CEN.out = WGT.CEN.FUN(data=cbind(xi,di,wgt,Z.DepCen),t0=t0,yes.exp=T,yes.DepCen=yes.DepCen)
-  wgt.cen = WGT.CEN.out$wgt; LamCexp = WGT.CEN.out$LamC.exp
+  WGT.CEN.out = WGT.CEN.FUN(data=cbind(xi,di,wgt,Z.DepCen),
+                            t0=t0,yes.exp=T,
+                            yes.DepCen=yes.DepCen)
+  wgt.cen = WGT.CEN.out$wgt
+  LamCexp = WGT.CEN.out$LamC.exp
   
-  output.acc = output.beta = output.cv = U.acc = as.list(1:n.S); names(output.acc) = names(output.beta)= names(output.cv)= names(U.acc) = names(cov.list)
+  output.acc = output.beta = output.cv = U.acc = as.list(1:n.S)
+  names(output.acc) = names(output.beta)= names(output.cv)= names(U.acc) = names(cov.list)
   for (s in 1:n.S){
-    nm.s = names(cov.list)[[s]]; cov.s = cov.list[[s]]; var.nm.s = cov.s$nm; ncc.nm.s = cov.s$ncc
+    nm.s = names(cov.list)[[s]]
+    cov.s = cov.list[[s]]
+    var.nm.s = cov.s$nm
+    ncc.nm.s = cov.s$ncc
     wgt.ncc.out = WGT.NCC.out[[match(ncc.nm.s,names(WGT.NCC.out))]]
-    wgt.ncc.out$tj = WGT.NCC.out$tj; wgt.ncc.out$pi.tj = WGT.NCC.out$pi.tj
+    wgt.ncc.out$tj = WGT.NCC.out$tj
+    wgt.ncc.out$pi.tj = WGT.NCC.out$pi.tj
     wgt.ncc = wgt.ncc.out$wgt
     vi = 1*(wgt.ncc!=0); 
     cat("Model",nm.s,sum(vi),"\n")
@@ -44,7 +71,8 @@ execute.fun <- function(data0,NCC.dat,cov.list,model,u0,t0,execute.rtn="ALL",yes
     ## === markers === ##
     var = cov.mat[,match(var.nm.s,colnames(cov.mat)),drop=F]
     mydata.ncc = cbind(id,vi.case,wgt.ncc,wgt.cen,xi,di,var)[vi==1,]
-    var.ncc = mydata.ncc[,-c(1:6),drop=F]; if (model.type=="GLM") var.ncc = cbind(1,var.ncc)
+    var.ncc = mydata.ncc[,-c(1:6),drop=F]
+    if (model.type=="GLM") var.ncc = cbind(1,var.ncc)
     if (yes.cv==T){
       cv.out = ROC.DIPW.CV.632(data.ncc=mydata.ncc,u0=u0,t0=t0,model=model)
       acc.cv = apply(cv.out$ACC.u0,1,mean,trim=0.1,na.rm=T)
@@ -52,31 +80,59 @@ execute.fun <- function(data0,NCC.dat,cov.list,model,u0,t0,execute.rtn="ALL",yes
       output.cv[[s]] = list("acc"=acc.cv,"roc"=roc.cv)
     } else output.cv[[s]]= NA
     
-    betafit = try(NCC.Fit.FUN(data.ncc=mydata.ncc,model=model.type,model.family=model.family,t0=t0,rtn="ALL"),silent=T)
+    betafit = try(NCC.Fit.FUN(data.ncc=mydata.ncc,
+                              model=model.type,
+                              model.family=model.family,
+                              t0=t0,
+                              rtn="ALL"),
+                  silent=T)
     if (any(substr(betafit,1,5)!="Error")){
       betahat = betafit[,1]; 
       score = as.matrix(var.ncc)%*%betahat
-      mydata.ncc = cbind(mydata.ncc[,c(1:6)],score,var.ncc)
-      out = try(ROC.DIPW.FUN(data.ncc=mydata.ncc,u0=u0,t0=t0,rtn=execute.rtn,var.control=list(wgt.ncc.dat=wgt.ncc.out,betafit=betafit,data0=cbind(di,vi),model=model.type,family=model.family,LamCexp=LamCexp)),silent=T)
+      mydata.ncc = cbind(mydata.ncc[,c(1:6)], score, var.ncc)
+      out = try(ROC.DIPW.FUN(data.ncc=mydata.ncc,
+                             u0=u0, t0=t0,
+                             rtn=execute.rtn,
+                             var.control=list(wgt.ncc.dat=wgt.ncc.out,
+                                              betafit=betafit,
+                                              data0=cbind(di,vi),
+                                              model=model.type,
+                                              family=model.family,
+                                              LamCexp=LamCexp)),
+                silent=T)
       if (any(substr(out,1,5)!="Error")) yes.error=F else yes.error =T
     } else {yes.error=T}
     
     if (yes.error==F){				
       if (execute.rtn=="ALL"){ 
-        beta.out = cbind(betahat,sqrt(out$var$VAR.Beta[,1]),sqrt(out$var$VAR.Beta[,2])); colnames(beta.out) = c("est","se-naive","se-adj")
-        acc.out = cbind(out$est$ACC.u0,sqrt(out$var$VAR.ACC[,1]),sqrt(out$var$VAR.ACC[,2])); colnames(acc.out) = c("est","se-naive","se-adj"); rownames(acc.out) = c("AUC",paste("TPR",u0,sep="-"),paste("NPV",u0,sep="-"),paste("PPV",u0,sep="-"))
-        output.beta[[s]] = beta.out; output.acc[[s]] = acc.out; U.acc[[s]] = out$var$Ui.ACC
+        beta.out = cbind(betahat,
+                         sqrt(out$var$VAR.Beta[,1]),
+                         sqrt(out$var$VAR.Beta[,2]))
+        colnames(beta.out) = c("est","se-naive","se-adj")
+        acc.out = cbind(out$est$ACC.u0,
+                        sqrt(out$var$VAR.ACC[,1]),
+                        sqrt(out$var$VAR.ACC[,2]))
+        colnames(acc.out) = c("est","se-naive","se-adj")
+        rownames(acc.out) = c("AUC",paste("TPR",u0,sep="-"),
+                              paste("NPV",u0,sep="-"),
+                              paste("PPV",u0,sep="-"))
+        output.beta[[s]] = beta.out
+        output.acc[[s]] = acc.out
+        U.acc[[s]] = out$var$Ui.ACC
       } else{
-        output.beta[[s]]=betahat; output.acc[[s]]=out$ACC.u0; U.acc[[s]]=NA
+        output.beta[[s]]=betahat
+        output.acc[[s]]=out$ACC.u0
+        U.acc[[s]]=NA
       } 
     } else {
-      output.beta[[s]] = NA; output.acc[[s]] = NA; U.acc[[s]]=NA
+      output.beta[[s]] = output.acc[[s]] = U.acc[[s]] = NA
     } # end if (yes.error==F)	
     
   } # end for s
   
   if (yes.IncV==T){
-    output.IncV = as.list(1:((n.S-1)*n.S/2)); nm.IncV = NULL
+    output.IncV = as.list(1:((n.S-1)*n.S/2))
+    nm.IncV = NULL
     index = 0
     for (s1 in 1:(n.S-1)){
       nm.s1 = names(cov.list)[s1]; U.s1 = U.acc[[s1]]
