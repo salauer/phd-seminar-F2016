@@ -32,9 +32,9 @@ output:
 
 ![](figures/nhs-study-design.jpg)
 
-- 126 RA patients had blood drawn in 1989/90
-- 337 controls matched on clinical/bloodwork covariates
-- 122 cases and 123 controls (randomly sampled from 337) had blood genotyped in 2004
+- 126 RA patients had blood drawn in 1989/90 (cases)
+- 337 controls matched on clinical/bloodwork covariates (subcohort 1)
+- 122 cases and 123 controls (randomly sampled from 337) had blood genotyped in 2004 (subcohort 2)
 
 ## Study Design
 
@@ -46,14 +46,14 @@ output:
 
 ## Study Design: Covariates Collected
 
-- Clinical covariates (taken at time of blood draw)
+- Clinical covariates (taken at time of blood draw): $\textbf{Z}$
     - Age
     - Smoking (in pack-years)
     - Alcohol (cumulative intake)
-- Blood sample biomarkers (regarding inflammation)
+- Blood sample biomarkers (regarding inflammation): $\textbf{B}$
     - IL-6
     - sTNFRII
-- Genetic data
+- Genetic data: $\textbf{G}$
     - 39 SNPs identified with RA risks
 
 ## Study Design
@@ -65,6 +65,7 @@ How can we identify the relevant risk factors in this study design, accounting f
 ## Challenges: Sampling
 
 - The control group not a simple random sample, due to matching
+- Subcohort 2 is nested within subcohort 1
 - Further difficulties due to protection of some individuals
 
 ## Challenges: Time-varying effects
@@ -84,23 +85,58 @@ How can we identify the relevant risk factors in this study design, accounting f
     - Didn't exist for 3-phase studies
     - Sequential finite population sampling induces complex correlation between observations
     
-## Solutions: Sampling
+## Model Construction: Sampling
 
-- Notation?
+In the last two classes, we learned about inclusion probabilities and inverse probability weighting (IPW) for nested case-control studies, providing us with the following equations (notation changed to fit our paper):
 
-## Solutions: Sampling
+$$
+\begin{aligned}
+\hat{p}_{0i} =& 1 - \prod_{j:i \in R_j} (1 - \frac{m}{\mathfrak{n}_j - 1}\delta_j) \\
+\hat{p}_i =& \delta_i + (1-\delta_i)\hat{p}_{0i} \\
+\hat{w}_i =& V_i/\hat{p}_i
+\end{aligned}
+$$
 
-- summary and/or equations
+- $\hat{p}_{0i}$ is the probability that subject $i$ is chosen as a control for any subject $j$. $m$ is number of samples, $\mathfrak{n}_j$ is size of risk set $R_j$.
+- $\hat{p}_i$ is the probability of being chosen as a case, $\delta_i$, or as a control, $(1-\delta_i)\hat{p}_{0i}$.
+- $\hat{w}_i$ is the weight for the contribution of each observation to the likelihood, with $V_i$ as the selection indicator weighted by the inverse of the probability of selection.
 
-## Solutions: Time-varying effects
+## Model Construction: Sampling
+
+These equations need to be adjusted for each subcohort (denoted with superscript $\mathbb{B}$ and $\mathbb{G}$), like so:
+
+$$
+\begin{aligned}
+\hat{p}_{0i}^{\mathbb{B}} =& 1 - \prod_{j:i \in R_j} (1 - \frac{m^{\mathbb{B}}\delta_j}{\mathfrak{n}_j - 1}) \\
+\hat{p}_{0i}^{\mathbb{G}} =& 1 - \prod_{j:i \in R_j} (1 - \frac{m^{\mathbb{B}}\delta_j}{\mathfrak{n}_j - 1}\cdot \frac{m^\mathbb{G}}{m^\mathbb{B}}) \\
+=& 1 - \prod_{j:i \in R_j} (1 - \frac{m^{\mathbb{G}}\delta_j}{\mathfrak{n}_j - 1}) \\
+\hat{p}_i^\mathbb{B} =& \delta_i + (1-\delta_i)\hat{p}_{0i}^\mathbb{B} \\
+\hat{p}_i^\mathbb{G} =& \delta_i + (1-\delta_i)\hat{p}_{0i}^\mathbb{G}
+\end{aligned}
+$$
+
+## Model Construction: Sampling
+
+Since some portion of the sample is protected for use in other studies ($1-\mathbb{P}_0$), that also needs to be accounted for:
+
+$$
+\begin{aligned}
+\mathbb{P}_i^\mathbb{B} =& \hat{p}_i^\mathbb{B}\mathbb{P}_0 \\
+\mathbb{P}_i^\mathbb{G} =& \hat{p}_i^\mathbb{G}\mathbb{P}_0 \\
+\hat{w}_i^\mathbb{B} =& V_i^\mathbb{B}/\hat{p}_i^\mathbb{B} \\
+\hat{w}_i^\mathbb{G} =& V_i^\mathbb{G}/\hat{p}_i^\mathbb{G}
+\end{aligned}
+$$
+
+## Model Construction: Time-varying effects
 
 
 
-## Solutions: Time-varying effects
+## Model Construction: Time-varying effects
 
 
 
-## Commonly-used accuracy measures for markers
+## Evaluation: Commonly-used accuracy measures for markers
 
 $\mathbb{F}$ is the generic $t_0$-year risk estimate from fitting a model.
 
