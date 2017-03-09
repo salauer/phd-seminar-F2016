@@ -130,11 +130,31 @@ $$
 
 ## Model Construction: Time-varying effects
 
+A commonly used approach is the Proportional Hazards model from survival analysis:
 
+$$
+\begin{aligned}
+P(T^{\dagger}\le t_0|\boldsymbol{Z}_{\mathbb{G} + \mathbb{B}}) =& 1 - exp [exp\{\boldsymbol{\gamma}^{COX}_{\mathbb{G} + \mathbb{B}}(t_0)^T\boldsymbol{Z}_{\mathbb{G} + \mathbb{B}}\}] \\
+\boldsymbol{\gamma}^{COX}_{\mathbb{G} + \mathbb{B}} =& (log\Lambda_{\mathbb{G} + \mathbb{B}}(t_0), \boldsymbol{\beta}_{\mathbb{G} + \mathbb{B}}^T)^T
+\end{aligned}
+$$
+
+- $\Lambda_{\mathbb{G} + \mathbb{B}}(t_0)$ is the baseline cumulative hazard function
+- $\boldsymbol{\beta}_{\mathbb{G} + \mathbb{B}}$ are the unknown log hazard ratio parametes (i.e. marker effect size)
+    - PH does not allow these marker effects to change over time
 
 ## Model Construction: Time-varying effects
 
+Authors accounted for time-varying effects by using a GLM specified as:
 
+$$
+\begin{aligned}
+P(T^{\dagger}\le t_0|\boldsymbol{Z}_{\mathbb{G} + \mathbb{B}}) =& g\{\boldsymbol{\gamma}^{GLM}_{\mathbb{G} + \mathbb{B}}(t_0)^T\boldsymbol{Z}_{\mathbb{G} + \mathbb{B}}\} \\
+\boldsymbol{\gamma}^{GLM}_{\mathbb{G} + \mathbb{B}} =& (\alpha(t_0), \boldsymbol{\beta}_{\mathbb{G} + \mathbb{B}}(t_0)^T)^T
+\end{aligned}
+$$
+
+## Model Construction: Time-varying effects
 
 ## Evaluation: Commonly-used accuracy measures for markers
 
