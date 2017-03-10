@@ -4,6 +4,8 @@ author: "Yubing Yao, Stephen Lauer"
 date: "March 10, 2017"
 output: 
     beamer_presentation:
+        includes:
+            in_header: slide-numbers.tex
         fig_caption: false
 ---
 
@@ -137,7 +139,7 @@ A commonly used approach is Cox's Proportional Hazards (PH) model from survival 
 
 $$
 \begin{aligned}
-P(T^{\dagger}\le t_0|\boldsymbol{Z}_{\mathbb{G} + \mathbb{B}}) =& 1 - exp [exp\{\boldsymbol{\gamma}^{COX}_{\mathbb{G} + \mathbb{B}}(t_0)^T\boldsymbol{Z}_{\mathbb{G} + \mathbb{B}}\}] \\
+P(T^{\dagger}\le t_0|\boldsymbol{Z}_{\mathbb{G} + \mathbb{B}}) =& 1 - exp [-exp\{\boldsymbol{\gamma}^{COX}_{\mathbb{G} + \mathbb{B}}(t_0)^T\boldsymbol{Z}_{\mathbb{G} + \mathbb{B}}\}] \\
 \boldsymbol{\gamma}^{COX}_{\mathbb{G} + \mathbb{B}} =& (log\Lambda_{\mathbb{G} + \mathbb{B}}(t_0), \boldsymbol{\beta}_{\mathbb{G} + \mathbb{B}}^T)^T
 \end{aligned}
 $$
