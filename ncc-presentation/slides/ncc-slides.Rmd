@@ -106,10 +106,10 @@ Since some portion of the sample is protected for use in other studies ($1-\math
 
 $$
 \begin{aligned}
-\mathbb{P}_i^\mathbb{B} =& \widehat{p}_i^\mathbb{B}\mathbb{P}_0 \\
-\mathbb{P}_i^\mathbb{G} =& \widehat{p}_i^\mathbb{G}\mathbb{P}_0 \\
-\widehat{w}_i^\mathbb{B} =& V_i^\mathbb{B}/\widehat{p}_i^\mathbb{B} \\
-\widehat{w}_i^\mathbb{G} =& V_i^\mathbb{G}/\widehat{p}_i^\mathbb{G}
+\widehat{\mathbb{P}}_i^\mathbb{B} =& \widehat{p}_i^\mathbb{B}\mathbb{P}_0 \\
+\widehat{\mathbb{P}}_i^\mathbb{G} =& \widehat{p}_i^\mathbb{G}\mathbb{P}_0 \\
+\widehat{w}_i^\mathbb{B} =& V_i^\mathbb{B}/\widehat{\mathbb{P}}_i^\mathbb{B} \\
+\widehat{w}_i^\mathbb{G} =& V_i^\mathbb{G}/\widehat{\mathbb{P}}_i^\mathbb{G}
 \end{aligned}
 $$
 
