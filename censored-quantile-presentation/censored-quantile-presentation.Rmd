@@ -1,0 +1,145 @@
+---
+title: "Censored quantile regression with partially functional effects"
+author: "Stephen Lauer & Emily Peterson"
+date: "April 28, 2017"
+output:
+    beamer_presentation:
+        includes:
+            in_header: slide-numbers.tex
+---
+
+## Background on quantile regression
+
+- Each covariate effect varies by quantile.
+- For event time of interest $Y$ and covariate vector $W$, a quantile regression model assumes the $\tau$th quantile of $Y$ is given by:
+
+$$
+\begin{aligned}
+Q_{Y}(\tau)&= F^{-1}_{Y}(\tau)\equiv \inf \{y: F_{Y}(y)\geq \tau\}, \quad \tau\in(0,1) \\
+Q_{Y}(\tau|W)&= W^{T}\beta(\tau)
+\end{aligned}
+$$
+
+- $Q_{Y}(\tau|W) \equiv inf{y: pr(Y \leq y | W) \geq \tau}$ denotes $\tau$th conditional quantile of $Y$ given $W$.
+- Describes linear relationship between $W$ and $\tau$th quantile.
+- Quantile function is minimum value of time $T$ below which subject will fall $p\times 100$ percent of times.
+
+## Partially functional effects
+- $\beta(\tau)$ represents effect of $W$ on $Q_{Y}(\tau|W)$
+- Coefficients for $W$ are allowed to be function of $\tau$ meaning they are allowed to be related to both shape and location of distribution, not just a measure of central tendency.
+- Partially Function Effects:
+    - A model which includes a mixture of constant and varying effects.
+    - $\tau$-varying coefficients correspond to effects allowed to vary by quantile group. 
+- May be preferred to fully functional model due to more accurate quantile prediction for small $\tau$
+
+## Censored quantile regression
+If the response variable is subject to censoring, the conditional mean is not identifiable wihtout additional distributional assumptions, but the conditional quantile is often identifiable.
+
+## Censored quantile regression
+Let $T$ and $C$ denote survival and censoring time.
+
+$X = \min(T,C)$ and $\delta = I(T \leq C)$ where $I(\cdot)$ is indicator function.
+
+$Y = \log T$
+
+Partition $W$ into constant and quantile varying effects
+$$
+W=(Z^{T}, V^{T})^{T}
+$$
+
+$Z$ is $p\times 1$ vector of $\tau$ varying effects.
+
+$V$ is $q\times 1$ vector of constant effects.
+
+Data: $\{(X_{i}, \delta_{i}, Z_{i}, V_{i}),\quad i=1,...,n\}$
+
+\textbf{Notes}
+
+(a) Cumulative Distribution Function: $F_{T}(t|Z,V)= \Pr(T \leq t|Z,V)$
+(b) Survival Function: $S(t)= 1-F_{T}(T|Z,V)$
+(c) Cumulative Hazard Function: $\Lambda(t)= -\log S(t)= -\log (1-F_{T}(T|Z,V))$
+
+## Partially functional quantile regression model
+
+$$
+Q_{Y}(\tau|Z,V) = Z^{T}\beta(\tau) + V^{T}\gamma, \quad \tau \in (0,1)
+$$
+
+- How do we account for the censoring?
+- Monotone profile estimating equation!
+
+## Martingale process
+
+- One jump counting process: gives information about when events occur. i.e. If person $i$ is "failure" by time $t$.
+$$
+N_{i}(t)= I(X_{i}\leq t, \delta_{i}=1)
+$$
+
+- Indicator if survival/censored time is below $t$
+$$
+Y_{i}(t)= I(X_{i}\geq t)
+$$
+
+- Martingale counting process wrt $F_{t}$
+$$
+M(t)= N(t)-\Lambda(t)
+$$
+
+    - Non-decreasing step function minus a compensator
+
+- Mean-zero white noise
+$$
+E[M(t)|V,Z]=0
+$$
+    
+
+## Estimating equation (Peng \& Huang, 2008)
+
+Extend the Martingale representation of the Nelson-Aalen estimator of cumulative hazard to produce an estimating equation.
+
+- NA estimator
+$$
+\hat{H}(t)-H(t)= \int_{0}^{t}\frac{1}{R(s)}\partial M(s)
+$$
+
+- Estimating equation
+$$
+\begin{split}
+    \text{E} \Bigg [ n^{-1/2}\sum_{i=1}^{n}\omega_{i} \bigg (N_{i} \exp \{Z_{i}^{T} \beta_{0} (\tau) + V_{i}^{T}\gamma_{0}\} - \\ \int_{0}^{\tau} I \Big [X_{i} \geq \exp \{Z_{i}^{T} \beta_{0} (u) + V_{i}^{T}\gamma_{0}\} \Big ] dH(u) \bigg ) \Bigg ] \\ = 0
+\end{split}
+$$
+
+- $\beta_{0}$ and $\gamma_{0}$ are true values of $\beta$ and $\gamma$.
+- Indicator is $\Lambda_{i}=\exp \{Z_{i}^{T} \beta_{0} (\tau + V_{i}^{T} \gamma_{0}) \}$
+
+## Computing Algorithm
+- Step 1: Get $\hat{\beta}(\tau_{j}, \gamma)$ with $\gamma$ fixed.
+
+$$
+\begin{split}
+n^{-1} \sum_{i=1}^{n} Z_{i} \Bigg ( N_{i} \exp \{Z_{i}^{T} \hat{\beta}(\tau_{j}) + V_{i}^{T}\gamma\} - \\
+\sum_{k=0}^{j-1} I \bigg [X_{i} \geq \exp \{Z_{i}^{T} \hat{\beta} (\tau_k, \gamma) + V_{i}^{T} \gamma)\} \bigg ] \Big ( H(\tau_{k+1}) - H(\tau_k) \Big) \Bigg) \\
+=0
+\end{split}
+$$
+
+Solve for $\beta(\tau_j)$
+
+## Computing Algorithm 
+- Step 2: Get $\hat{\gamma}$ with $\hat{\beta}(\tau_j)$ fixed.
+$$
+\begin{split}
+n^{-1} \sum_{i=1}^{n} V_{i} \Bigg( N_{i} \exp \{ Z_{i}^{T} \hat{\beta}(\tau_{j}) + V_{i}^{T} \gamma \} - \\
+\sum_{k=0}^{L-1} I \bigg [X_{i} \geq \exp \{Z_{i}^{T} \hat{\beta} (\tau_k, \gamma) + V_{i}^{T} \gamma \} \bigg ] \Big (H(\tau_{k+1})-H(\tau_k ) \Big) \Bigg ) \\
+=0
+\end{split}
+$$
+
+Solve for $\gamma$
+
+- Step 3...
+
+Iterate until convergence criteria is met.
+
+## Asymptotic Properties
+
