@@ -141,5 +141,57 @@ Solve for $\gamma$
 
 Iterate until convergence criteria is met.
 
-## Asymptotic Properties
+## Asymptotic properties
 
+## Simulation study: overview
+
+Simulations were conducted to assess the finite-sample performace of the proposed method versus the Peng-Huang estimator in the following metrics:
+
+- bias
+- variance
+- computing time, as well as
+- the impact of varying the following parameters on estimator efficiency:
+    - sample size
+    - number of covariates
+    - dependency among covariates
+    - censoring proportion
+    - error heteroscedasticity
+    
+(Could look across the 2 sims in main paper or across 5 experiments in supplement)
+
+## Simulation study: Setup I
+
+$$
+\begin{aligned}
+    \log T &= b_1 V_1 + b_2 V_2 + \epsilon \\
+    \epsilon &\sim \text{extreme value (?)} \\
+    V_1 &\sim Uniform(0,1) \\
+    V_2 &\sim Bernoulli(0.5) \\
+    b_1 &: {0,0.5} \\
+    b_2 &= -0.5 \\
+    C &\sim Uniform(0.1I(Z_1=1),c_u) \\
+    c_u &= 
+    \begin{cases}
+        3.8 & \quad \text{when } b_1=0.5 \\
+        5 & \quad \text{when } b_1=0 \\
+    \end{cases}
+\end{aligned}
+$$
+
+## Simulation study: Setup I (cont.)
+
+Partially functional quantile regression model:
+
+$$
+\begin{aligned}
+    Q_{Y}(\tau|Z,V) &= Z^{T}\beta(\tau) + V^{T}\gamma, \quad \tau \in (0,1) \\
+    Z &= 1 \\
+    V &= (V_1, V_2)^T \\
+    \beta_0(\tau) &= Q_\epsilon(\tau) \\
+    \gamma_0 &\equiv (\gamma_{01},\gamma_{02})^T = (b_1, b_2)^T
+\end{aligned}
+$$
+
+## Case study: renal disease
+
+## Discussion
