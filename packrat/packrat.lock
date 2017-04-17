@@ -1,6 +1,6 @@
 PackratFormat: 1.4
 PackratVersion: 0.4.7.1
-RVersion: 3.3.1
+RVersion: 3.3.3
 Repos: BioCsoft=https://bioconductor.org/packages/3.2/bioc,
     BioCann=https://bioconductor.org/packages/3.2/data/annotation,
     BioCexp=https://bioconductor.org/packages/3.2/data/experiment,
@@ -43,6 +43,12 @@ Version: 0.7.400.2.0
 Hash: 5c6ad5ed5029ca79a26f3f17afd037f4
 Requires: Rcpp
 
+Package: V8
+Source: CRAN
+Version: 1.4
+Hash: 3e6969b19bc64fa0a72763b1d16adf51
+Requires: Rcpp, curl, jsonlite
+
 Package: assertthat
 Source: CRAN
 Version: 0.1
@@ -76,9 +82,9 @@ Requires: bitops
 
 Package: cdcfluview
 Source: CRAN
-Version: 0.4.0
-Hash: 632a49cb2c154f95171ec82b521c8808
-Requires: dplyr, httr, pbapply, xml2
+Version: 0.5.1
+Hash: d5bb6d74675274f558740bd58ef8895b
+Requires: V8, dplyr, httr, jsonlite, purrr, readr, xml2
 
 Package: colorspace
 Source: CRAN
@@ -122,14 +128,14 @@ Package: fGarch
 Source: CRAN
 Version: 3010.82.1
 Hash: 76bb33e183eecae94a6eecce063159a2
-Requires: fBasics, timeDate, timeSeries
+Requires: timeDate, timeSeries, fBasics
 
 Package: forecast
 Source: CRAN
 Version: 7.2
 Hash: e7b03ce2ef2830a0bb204f373a8d0ad2
-Requires: Rcpp, RcppArmadillo, colorspace, fracdiff, ggplot2, timeDate,
-    tseries, zoo
+Requires: Rcpp, colorspace, fracdiff, timeDate, zoo, RcppArmadillo,
+    tseries, ggplot2
 
 Package: formatR
 Source: CRAN
@@ -145,7 +151,7 @@ Package: ggplot2
 Source: CRAN
 Version: 2.1.0
 Hash: 50e297b0191179c39c7dcae0eff72b51
-Requires: MASS, digest, gtable, plyr, reshape2, scales
+Requires: MASS, digest, gtable, plyr, scales, reshape2
 
 Package: gss
 Source: CRAN
@@ -188,7 +194,7 @@ Package: knitr
 Source: CRAN
 Version: 1.14
 Hash: e7b411f5a5512295a260a45683fa0c4a
-Requires: digest, evaluate, formatR, highr, markdown, stringr, yaml
+Requires: digest, highr, yaml, markdown, stringr, evaluate
 
 Package: labeling
 Source: CRAN
@@ -199,12 +205,6 @@ Package: lazyeval
 Source: CRAN
 Version: 0.2.0
 Hash: 3d6e7608e65bbf5cb170dab1e3c9ed8b
-
-Package: lubridate
-Source: CRAN
-Version: 1.6.0
-Hash: b90f4cbefe0b3c545dd68b22c66a8a12
-Requires: stringr
 
 Package: magrittr
 Source: CRAN
@@ -249,6 +249,12 @@ Version: 1.8.4
 Hash: 75ca080b10a9314a9b293964331e5df7
 Requires: Rcpp
 
+Package: purrr
+Source: CRAN
+Version: 0.2.2
+Hash: 14bc8b3a4c61f67866ebfb413f77ff9f
+Requires: BH, Rcpp, dplyr, lazyeval, magrittr
+
 Package: quadprog
 Source: CRAN
 Version: 1.5-5
@@ -256,9 +262,9 @@ Hash: 69000b7dc41b09977dcf781f909d235c
 
 Package: readr
 Source: CRAN
-Version: 1.0.0
-Hash: d7cf8e4bfe7f5fa25d908362735bc9ae
-Requires: BH, R6, Rcpp, curl, hms, tibble
+Version: 1.1.0
+Hash: 07d69da4471c37829b2fdf646ce3c0e7
+Requires: BH, R6, Rcpp, hms, tibble
 
 Package: reshape2
 Source: CRAN
@@ -270,8 +276,8 @@ Package: rmarkdown
 Source: CRAN
 Version: 1.2
 Hash: 0bcccd4b0db101c709ee10012320a66f
-Requires: base64enc, caTools, evaluate, htmltools, jsonlite, knitr,
-    rprojroot, yaml
+Requires: base64enc, jsonlite, yaml, rprojroot, caTools, htmltools,
+    evaluate, knitr
 
 Package: rprojroot
 Source: CRAN
@@ -283,7 +289,7 @@ Package: scales
 Source: CRAN
 Version: 0.4.0
 Hash: c4a91e7a322e03813b68b73940ce031f
-Requires: RColorBrewer, Rcpp, dichromat, labeling, munsell, plyr
+Requires: RColorBrewer, Rcpp, dichromat, labeling, plyr, munsell
 
 Package: stabledist
 Source: CRAN
@@ -303,9 +309,9 @@ Requires: magrittr, stringi
 
 Package: tibble
 Source: CRAN
-Version: 1.2
-Hash: 3b35b556ef7acddb0d28fe6a27ad50e4
-Requires: Rcpp, assertthat, lazyeval
+Version: 1.3.0
+Hash: 57125681b81c56286dc9123485bc5752
+Requires: Rcpp, lazyeval
 
 Package: timeDate
 Source: CRAN
@@ -326,8 +332,8 @@ Requires: quadprog, zoo
 
 Package: xml2
 Source: CRAN
-Version: 1.0.0
-Hash: a55c497b694e044296830eb8ac5c2fee
+Version: 1.1.1
+Hash: 383085cb745528742fcfec4037776fbc
 Requires: BH, Rcpp
 
 Package: xtable
