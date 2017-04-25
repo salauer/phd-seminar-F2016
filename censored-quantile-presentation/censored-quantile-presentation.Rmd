@@ -7,6 +7,14 @@ output:
         includes:
             in_header: slide-numbers.tex
 ---
+### Overall Purpose
+
+- Quantile regression offers felxibility in assessing covariate effects on event times.
+- Develop quantile regression approach for survival subject to conditionally independent censoring.
+-Tailor regression to partially functional effect setting. (Both varying and constant effects) 
+- Martingale based estimating equations lead to single algorithm that invovles minimizing L1-type convex functions.
+- Establish properties of estimators.
+
 
 ## Background on quantile regression
 
@@ -32,8 +40,7 @@ $$
     - $\tau$-varying coefficients correspond to effects allowed to vary by quantile group. 
 - May be preferred to fully functional model due to more accurate quantile prediction for small $\tau$
 
-## Censored quantile regression
-If the response variable is subject to censoring, the conditional mean is not identifiable wihtout additional distributional assumptions, but the conditional quantile is often identifiable.
+
 
 ## Censored quantile regression
 Let $T$ and $C$ denote survival and censoring time.
@@ -53,11 +60,11 @@ $V$ is $q\times 1$ vector of constant effects.
 
 Data: $\{(X_{i}, \delta_{i}, Z_{i}, V_{i}),\quad i=1,...,n\}$
 
-\textbf{Notes}
+\textbf{Reminder:}
 
-(a) Cumulative Distribution Function: $F_{T}(t|Z,V)= \Pr(T \leq t|Z,V)$
-(b) Survival Function: $S(t)= 1-F_{T}(T|Z,V)$
-(c) Cumulative Hazard Function: $\Lambda(t)= -\log S(t)= -\log (1-F_{T}(T|Z,V))$
+(a) CDF: $F_{T}(t|Z,V)= \Pr(T \leq t|Z,V)$
+(b) Survival Function: $S(t)= Pr(T\geq t|Z,V) = 1-F_{T}(t|Z,V)$
+(c) Cumulative Hazard Function: $\Lambda(t)= -\log S(t)= -\log (1-F_{T}(t|Z,V))$
 
 ## Partially functional quantile regression model
 
@@ -69,23 +76,24 @@ $$
 - Monotone profile estimating equation!
 
 ## Martingale process
-
+- To estimate $\beta(\tau)$, idea is to use stochastic property of martingale. 
 - One jump counting process: gives information about when events occur. i.e. If person $i$ is "failure" by time $t$.
 $$
 N_{i}(t)= I(X_{i}\leq t, \delta_{i}=1)
 $$
 
-- Indicator if survival/censored time is below $t$
+- Indicator if survival/censored time is above/equal to $t$
 $$
 Y_{i}(t)= I(X_{i}\geq t)
 $$
 
-- Martingale counting process wrt $F_{t}$
-$$
-M(t)= N(t)-\Lambda(t)
-$$
+- Martingale counting process wrt $F_{t}$, given by $M(t)= N(t)-\Lambda(t)$
+$$M(t) = N(t) -\int_{0}^{t} Y(s)d\Lambda_{T}(s|Z,V)$$
 
-    - Non-decreasing step function minus a compensator
+
+
+
+- Non-decreasing step function minus a compensator (Cumulative Hazard Function)
 
 - Mean-zero white noise
 $$
@@ -95,14 +103,17 @@ $$
 
 ## Estimating equation (Peng \& Huang, 2008)
 
-Extend the Martingale representation of the Nelson-Aalen estimator of cumulative hazard to produce an estimating equation.
+- Approach for random censoring is to extend the Martingale representation of the Nelson-Aalen estimator of cumulative hazard to produce an estimating equation.
+- Aim: to get $\beta$ and $\gamma$. 
 
-- NA estimator
-$$
-\hat{H}(t)-H(t)= \int_{0}^{t}\frac{1}{R(s)}\partial M(s)
-$$
+- NA estimator: non-parametric estimator of the cumulative hazard rate function in case of censored data given by 
+$$\tilde{H}(t)= \sum_{t_i \leq t}\frac{d_i}{n_i}$$
+\noindent
+with $d_i$ denote number of events at $t_i$ and $n_i$ is total number at risk at $t_i$. 
 
-- Estimating equation
+
+
+## The Estimating equation
 $$
 \begin{split}
     \text{E} \Bigg [ n^{-1/2}\sum_{i=1}^{n}\omega_{i} \bigg (N_{i} \exp \{Z_{i}^{T} \beta_{0} (\tau) + V_{i}^{T}\gamma_{0}\} - \\ \int_{0}^{\tau} I \Big [X_{i} \geq \exp \{Z_{i}^{T} \beta_{0} (u) + V_{i}^{T}\gamma_{0}\} \Big ] dH(u) \bigg ) \Bigg ] \\ = 0
@@ -110,7 +121,7 @@ $$
 $$
 
 - $\beta_{0}$ and $\gamma_{0}$ are true values of $\beta$ and $\gamma$.
-- Indicator is $\Lambda_{i}=\exp \{Z_{i}^{T} \beta_{0} (\tau + V_{i}^{T} \gamma_{0}) \}$
+- Indicator $= \Lambda_{i}[\exp \{Z_{i}^{T} \beta_{0} (\tau) + V_{i}^{T} \gamma_{0} \}]$
 
 ## Computing Algorithm
 - Step 1: Get $\hat{\beta}(\tau_{j}, \gamma)$ with $\gamma$ fixed.
@@ -141,7 +152,45 @@ Solve for $\gamma$
 
 Iterate until convergence criteria is met.
 
-## Asymptotic properties
+
+## L1-type Optimization
+- Finds roots of equations via optimization techniques
+- Accomplished by linear programming techniques to get $\hat{\beta}$ and $\hat{\gamma}$ that minimizes function.
++ Step 1: Set $m=0$ and choose initial $\hat{\gamma}^{m}$
++ Step 2: Find $\hat{\beta}^{(m)}(\tau_j, \hat{\gamma}^{(m)})$
+\[l_{j}(h)= \sum_{i=1}^{n}|\delta_i (log X_i - V_{i}^{T}\hat{\gamma}^{(m)}-Z_{i}^{T}h)| + |R^{*}-\sum_{l=1}^{n}(-\delta_{l}Z_{l}^{T}h)|\]
+\[+|R^{*}- \sum_{r=1}^{n}(2Z_{r}^{T}h\sum_{k=0}^{j-1}I[X_r \geq exp{Z_{i}^{T}\hat{\beta}^{(m)}+V_{i}^{T}\hat{\gamma}^{(m)}}]\]
+\[{H(\tau_{k+1})- H(\tau_k)})|\]
+
+
+##
++ Step 3: Find $\hat{\gamma}^{(m+1)}$ given estimate for $\beta^{(m)}$ from step 2.
+\[l^{*}(h)= \sum_{i=1}^{n}|\delta_i (log X_i - Z_{i}^{T}\hat{\beta}^{(m)}-V_{i}^{T}h)| + |R^{*}-\sum_{l=1}^{n}(-\delta_{l}V_{l}^{T}h)|\]
+\[+\sum_{k=0}^{L-1}[\sum_{i=1}^{n}|{logX_i-Z_{i}^{T}\hat{\beta}^{(m)}-V_{i}^{T}h}{H(\tau_{k+1}-H(\tau_k )}|\]
+\[+|R^{*}-\sum_{r=1}^{n}(-V_{r}^{T}h){H(\tau_{k+1})-H(\tau_k )}|\]
+\[+|R^{*}-\sum_{s=1}^{n}2V_{s}^{T}hH(\tau_L )|\]
+
++ Step 4: Update $m$ to $m+1$ and repeat steps 2-3 until convergence criteria met.
+
+
+
+
+
+## Asymptotic Properties
+
+- Theorem 1:  Shows consistency, as $n\rightarrow \infty$, estimates converge to the truth, so they are \textbf{unbiased} estimators.
+$$\hat{\gamma}\rightarrow \gamma_0 \mbox { in probability }$$
+$$ sup||\hat{\beta}(\tau)-\beta_0 (\tau)||\rightarrow 0 \mbox{ in probability }$$
+
+- Theorem 2: Asymptotic Distributions
+$$n^{1/2}(\hat{\gamma}- \gamma_0 )\sim^{\mathrm{asymp}}N(0, E[...])$$
+$$n^{1/2}(\hat{\beta}(\tau)- \beta_0(\tau))\rightarrow GT(\tau)$$
++ Generalizatin of asymptotic normality for parameter that is function of $\tau$. 
+
+
+## Resampling-based inference procedure
+
+
 
 ## Simulation study: overview
 
@@ -193,5 +242,15 @@ $$
 $$
 
 ## Case study: renal disease
+
+- A prospective study to investigate the risk factors in a cohort of 191 incidnt dialysis patients recruited from 26 facilities
+- 35% of survival times censored due to renal transplant or the end of the study
+- Covariates:
+    - Patient age
+    - Fish consumption in first year of dialysis (1 if any, 0 o.w.)
+    - Baseline dialysis modality (1 if hemodialysis, 0 o.w.)
+    - Education level (1 if high school or higher, 0 o.w.)
+    - Race (1 if black, 0 o.w.)
+    - Severe restless leg symptoms (1 if present, 0 o.w.)
 
 ## Discussion
