@@ -4,8 +4,9 @@ author: "Stephen Lauer & Emily Peterson"
 date: "April 28, 2017"
 output:
     beamer_presentation:
-        includes:
-            in_header: slide-numbers.tex
+      includes:
+        in_header: slide-numbers.tex
+      keep_tex: yes
 ---
 ### Overall Purpose
 
@@ -124,12 +125,12 @@ $$
 - Indicator $= \Lambda_{i}[\exp \{Z_{i}^{T} \beta_{0} (\tau) + V_{i}^{T} \gamma_{0} \}]$
 
 ## Computing Algorithm
-- Step 1: Get $\hat{\beta}(\tau_{j}, \gamma)$ with $\gamma$ fixed.
+- Step 1: Get $\widehat{\beta}(\tau_{j}, \gamma)$ with $\gamma$ fixed.
 
 $$
 \begin{split}
-n^{-1} \sum_{i=1}^{n} Z_{i} \Bigg ( N_{i} \exp \{Z_{i}^{T} \hat{\beta}(\tau_{j}) + V_{i}^{T}\gamma\} - \\
-\sum_{k=0}^{j-1} I \bigg [X_{i} \geq \exp \{Z_{i}^{T} \hat{\beta} (\tau_k, \gamma) + V_{i}^{T} \gamma)\} \bigg ] \Big ( H(\tau_{k+1}) - H(\tau_k) \Big) \Bigg) \\
+n^{-1} \sum_{i=1}^{n} Z_{i} \Bigg ( N_{i} \exp \{Z_{i}^{T} \widehat{\beta}(\tau_{j}) + V_{i}^{T}\gamma\} - \\
+\sum_{k=0}^{j-1} I \bigg [X_{i} \geq \exp \{Z_{i}^{T} \widehat{\beta} (\tau_k, \gamma) + V_{i}^{T} \gamma)\} \bigg ] \Big ( H(\tau_{k+1}) - H(\tau_k) \Big) \Bigg) \\
 =0
 \end{split}
 $$
@@ -137,11 +138,11 @@ $$
 Solve for $\beta(\tau_j)$
 
 ## Computing Algorithm 
-- Step 2: Get $\hat{\gamma}$ with $\hat{\beta}(\tau_j)$ fixed.
+- Step 2: Get $\widehat{\gamma}$ with $\widehat{\beta}(\tau_j)$ fixed.
 $$
 \begin{split}
-n^{-1} \sum_{i=1}^{n} V_{i} \Bigg( N_{i} \exp \{ Z_{i}^{T} \hat{\beta}(\tau_{j}) + V_{i}^{T} \gamma \} - \\
-\sum_{k=0}^{L-1} I \bigg [X_{i} \geq \exp \{Z_{i}^{T} \hat{\beta} (\tau_k, \gamma) + V_{i}^{T} \gamma \} \bigg ] \Big (H(\tau_{k+1})-H(\tau_k ) \Big) \Bigg ) \\
+n^{-1} \sum_{i=1}^{n} V_{i} \Bigg( N_{i} \exp \{ Z_{i}^{T} \widehat{\beta}(\tau_{j}) + V_{i}^{T} \gamma \} - \\
+\sum_{k=0}^{L-1} I \bigg [X_{i} \geq \exp \{Z_{i}^{T} \widehat{\beta} (\tau_k, \gamma) + V_{i}^{T} \gamma \} \bigg ] \Big (H(\tau_{k+1})-H(\tau_k ) \Big) \Bigg ) \\
 =0
 \end{split}
 $$
@@ -155,42 +156,75 @@ Iterate until convergence criteria is met.
 
 ## L1-type Optimization
 - Finds roots of equations via optimization techniques
-- Accomplished by linear programming techniques to get $\hat{\beta}$ and $\hat{\gamma}$ that minimizes function.
-+ Step 1: Set $m=0$ and choose initial $\hat{\gamma}^{m}$
-+ Step 2: Find $\hat{\beta}^{(m)}(\tau_j, \hat{\gamma}^{(m)})$
-\[l_{j}(h)= \sum_{i=1}^{n}|\delta_i (log X_i - V_{i}^{T}\hat{\gamma}^{(m)}-Z_{i}^{T}h)| + |R^{*}-\sum_{l=1}^{n}(-\delta_{l}Z_{l}^{T}h)|\]
-\[+|R^{*}- \sum_{r=1}^{n}(2Z_{r}^{T}h\sum_{k=0}^{j-1}I[X_r \geq exp{Z_{i}^{T}\hat{\beta}^{(m)}+V_{i}^{T}\hat{\gamma}^{(m)}}]\]
-\[{H(\tau_{k+1})- H(\tau_k)})|\]
+- Accomplished by linear programming techniques to get $\widehat{\beta}$ and $\widehat{\gamma}$ that minimizes function.
++ Step 1: Set $m=0$ and choose initial $\widehat{\gamma}^{m}$
++ Step 2: Find $\widehat{\beta}^{(m)}(\tau_j, \widehat{\gamma}^{(m)})$
+$$
+\begin{split}
+l_j (h) = \sum_{i=1}^n \left | \delta_i \left (\log X_i - V_i^T \widehat{\gamma}^{(m)} - Z_i^T h \right ) \right | + \left | R^* - \sum_{l=1}^n \left (- \delta_l Z_l^T h \right ) \right | + \\ \Bigg | R^* - \sum_{r=1}^n \Bigg ( 2 Z_r^T h \sum_{k=0}^{j-1} I \left [ X_r \geq \exp \left \{ Z_i^T \widehat{\beta}^{(m)} + V_i^T \widehat{\gamma}^{(m)} \right \} \right ] \\ \left \{ H(\tau_{k+1}) - H(\tau_k) \right \} \Bigg ) \Bigg | 
+\end{split}
+$$
 
 
 ##
-+ Step 3: Find $\hat{\gamma}^{(m+1)}$ given estimate for $\beta^{(m)}$ from step 2.
-\[l^{*}(h)= \sum_{i=1}^{n}|\delta_i (log X_i - Z_{i}^{T}\hat{\beta}^{(m)}-V_{i}^{T}h)| + |R^{*}-\sum_{l=1}^{n}(-\delta_{l}V_{l}^{T}h)|\]
-\[+\sum_{k=0}^{L-1}[\sum_{i=1}^{n}|{logX_i-Z_{i}^{T}\hat{\beta}^{(m)}-V_{i}^{T}h}{H(\tau_{k+1}-H(\tau_k )}|\]
-\[+|R^{*}-\sum_{r=1}^{n}(-V_{r}^{T}h){H(\tau_{k+1})-H(\tau_k )}|\]
-\[+|R^{*}-\sum_{s=1}^{n}2V_{s}^{T}hH(\tau_L )|\]
++ Step 3: Find $\widehat{\gamma}^{(m+1)}$ given estimate for $\beta^{(m)}$ from step 2.
+$$
+\begin{split}
+l^{*}(h) = \sum_{i=1}^{n} \left |\delta_i \{ \log X_i - Z_{i}^{T} \widehat{\beta}^{(m)} - V_{i}^{T} h \} \right | + \left | R^{*} - \sum_{l=1}^{n} (-\delta_{l} V_{l}^{T} h) \right | + \\ \sum_{k=0}^{L-1} \Bigg [ \sum_{i=1}^{n} \left | \{ \log X_i - Z_{i}^{T} \widehat{\beta}^{(m)} - V_i^T h \} \{ H (\tau_{k+1}) - H (\tau_k) \} \right | + \\ \left | R^{*} - \sum_{r=1}^{n} (-V_{r}^{T} h) \{ H (\tau_{k+1}) - H (\tau_k) \} \right | \Bigg ] + \left | R^{*} - \sum_{s=1}^{n} 2 V_{s}^{T} h H (\tau_L ) \right |
+\end{split}
+$$
 
 + Step 4: Update $m$ to $m+1$ and repeat steps 2-3 until convergence criteria met.
-
-
-
-
 
 ## Asymptotic Properties
 
 - Theorem 1:  Shows consistency, as $n\rightarrow \infty$, estimates converge to the truth, so they are \textbf{unbiased} estimators.
-$$\hat{\gamma}\rightarrow \gamma_0 \mbox { in probability }$$
-$$ sup||\hat{\beta}(\tau)-\beta_0 (\tau)||\rightarrow 0 \mbox{ in probability }$$
+$$\widehat{\gamma}\rightarrow \gamma_0 \mbox { in probability }$$
+$$ sup||\widehat{\beta}(\tau)-\beta_0 (\tau)||\rightarrow 0 \mbox{ in probability }$$
 
 - Theorem 2: Asymptotic Distributions
-$$n^{1/2}(\hat{\gamma}- \gamma_0 )\sim^{\mathrm{asymp}}N(0, E[...])$$
-$$n^{1/2}(\hat{\beta}(\tau)- \beta_0(\tau))\rightarrow GT(\tau)$$
-+ Generalizatin of asymptotic normality for parameter that is function of $\tau$. 
+$$n^{1/2}(\widehat{\gamma} - \gamma_0 )\sim^{\mathrm{asymp}}N(0, E[...])$$
+$$n^{1/2}(\widehat{\beta}(\tau)- \beta_0(\tau))\rightarrow GT(\tau)$$
++ Generalization of asymptotic normality for parameter that is function of $\tau$. 
 
 
 ## Resampling-based inference procedure
 
+- The limit distributions of $\frac{\widehat{\gamma}-\gamma_0}{\sqrt{n}}$ and $\frac{\widehat{\beta}(\tau)-\beta_0(\tau)}{\sqrt{n}}$ involve unknown density functions
+- The estimation of these distributions may not be stable with a small or moderate sample size
+- The authors proposed a new resampling approach similar to that of wild bootstrapping
 
+## Resampling-based inference procedure
+
+1) Draw $n$ idd nonnegative variates of a known distribution with a mean and variance of 1, e.g.:
+$$
+\xi_i \sim \exp(1)
+$$
+2) Solve estimating equations on slides 12 and 13 perturbed by $\xi_i$
+$$
+\begin{split}
+\tilde{l}_{j}(h) = \sum_{i=1}^n \left | \xi_i \delta_i \left ( log X_i - V_i^T \gamma^{*(m)} - Z_i^{T}h \right ) \right | + \\ \left | R^{*} - \sum_{l=1}^{n} \left ( -\xi_l \delta_l Z_l^T h \right ) \right | + \\ \Bigg | R^* - \sum_{r=1}^n \Bigg ( 2 \xi_i Z_r^T h \sum_{k=0}^{j-1} I \left [ X_r \geq exp{Z_{i}^{T} \beta^{*(m)} + V_i^T \gamma^{*(m)}} \right ] \\ \left \{ H(\tau_{k+1}) - H(\tau_k) \right \} \Bigg ) \Bigg | 
+\end{split}
+$$
+
+## Resampling-based inference procedure
+
+2 continued)
+$$
+\begin{split}
+\tilde{l}^*(h) = \sum_{i=1}^n \left | \xi_i \delta_i \left \{ log X_i - Z_i^T \beta^{*(m)} - V_i^T h \right \} \right | + \\ \left | R^* - \sum_{l=1}^n \left ( - \xi_l \delta_lV_l^T h \right ) \right | + \\ \sum_{k=0}^{L-1} \Bigg [ \sum_{i=1}^n \left | \xi_i \left \{ \log X_i - Z_i^T \beta^{*(m)} - V_i^T h  \right \} \left \{ H (\tau_{k+1}) - H (\tau_k) \right \} \right | + \\ \left | R^{*} - \sum_{r=1}^{n} (-\xi_r V_{r}^{T} h) \left \{ H (\tau_{k+1}) - H (\tau_k ) \right \} \right | \Bigg ] + \left | R^{*} - \sum_{s=1}^{n} 2 \xi_s V_{s}^{T} h H ( \tau_L ) \right |
+\end{split}
+$$
+
+3) Repeat $K$ times
+
+## Resampling-based inference procedure
+
+- The variance of $\widehat{\beta}(\tau)$ and $\widehat{\gamma}$ can be estimated by the sample variance of $\{\beta_k^*(\tau)\}^K_{k=1}$ and $\{\gamma^*\}^K_{k=1}$
+- A confidence intervals can be constructed using normal approximations or by using the empirical percentiles
+- The conditional variance and covariance of the resampled estimating equations converge to the unconditional variance and covariance of the original estimating equations
+- The conditional distribution of $n^{1/2} (\gamma^* - \widehat{\gamma})$ converges to the unconditional distribution of $n^{1/2} (\widehat{\gamma} - \gamma_0)$, same for $\beta^* (\tau), \widehat{\beta} (\tau), \beta_0 (\tau)$
+- Has better numerical performance than a nonparametric bootstrap
 
 ## Simulation study: overview
 
@@ -198,48 +232,30 @@ Simulations were conducted to assess the finite-sample performace of the propose
 
 - bias
 - variance
-- computing time, as well as
 - the impact of varying the following parameters on estimator efficiency:
     - sample size
     - number of covariates
     - dependency among covariates
     - censoring proportion
     - error heteroscedasticity
-    
-(Could look across the 2 sims in main paper or across 5 experiments in supplement)
+- also, computing time
 
-## Simulation study: Setup I
+## Simulation study: bias and variance
 
-$$
-\begin{aligned}
-    \log T &= b_1 V_1 + b_2 V_2 + \epsilon \\
-    \epsilon &\sim \text{extreme value (?)} \\
-    V_1 &\sim Uniform(0,1) \\
-    V_2 &\sim Bernoulli(0.5) \\
-    b_1 &: {0,0.5} \\
-    b_2 &= -0.5 \\
-    C &\sim Uniform(0.1I(Z_1=1),c_u) \\
-    c_u &= 
-    \begin{cases}
-        3.8 & \quad \text{when } b_1=0.5 \\
-        5 & \quad \text{when } b_1=0 \\
-    \end{cases}
-\end{aligned}
-$$
+![Bias, empirical bias x$10^3$; EstVar, average of resampling-based variance estimates x$10^3$; EmpVar, empirical variances x$10^3$ Cov95, empirical coverage probabilities of 95% confidence intervals; VarRed, variance reduction of the proposed estimator over the Peng-Huang estimator (%)](figures/simulation-efficiency.jpg)
 
-## Simulation study: Setup I (cont.)
+## Simulation study: impact of varying parameters
 
-Partially functional quantile regression model:
-
-$$
-\begin{aligned}
-    Q_{Y}(\tau|Z,V) &= Z^{T}\beta(\tau) + V^{T}\gamma, \quad \tau \in (0,1) \\
-    Z &= 1 \\
-    V &= (V_1, V_2)^T \\
-    \beta_0(\tau) &= Q_\epsilon(\tau) \\
-    \gamma_0 &\equiv (\gamma_{01},\gamma_{02})^T = (b_1, b_2)^T
-\end{aligned}
-$$
+- Sample size
+    - proposed estimator is root $n$ convergent, like Peng-Huang
+- Number of covariates
+    - With more covariates, the variance reduction relative to the Peng-Huang estimator decreases
+- Dependency among covariates
+    - Dependent covariates are associated with a slight increase in variance reduction in $\gamma$ and decreases in relative efficiency of $\beta$, especially at small values of $\tau$
+- Censoring proportion
+    - More censoring is associated slight decreases in constant coefficient efficiency and no effect on functional coefficients
+- Error heteroscedasticity
+    - Variance reduction shifts from intercept estimation to functional and constant coefficients
 
 ## Case study: renal disease
 
